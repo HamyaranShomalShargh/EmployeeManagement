@@ -8,8 +8,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">اتوماسیون درخواست های پرسنل</h5>
+            <h4 class="iransans d-inline-block m-0 fw-bolder">
+                اتوماسیون درخواست های پرسنل
+                <span class="vertical-middle ms-1 text-muted">مشاهده ، تایید ، عدم تایید</span>
+            </h4>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -27,28 +29,28 @@
             <button class="btn btn-outline-dark d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_labour_law_modal">
                 <i class="far fa-filter-list fa-1-6x me-1"></i>
             </button>
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام، کد ملی، سازمان و نوع درخواست" data-table="search_table" v-on:input="filter_table">
+            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام، کد ملی، سازمان، قرارداد و نوع درخواست" data-table="requests_table" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table id="search_table" v-cloak class="table table-hover sortArrowWhite" data-filter="[2,3,4,5,6]">
+                <table id="requests_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2,3,4,5,6]">
                     <thead class="bg-light black-color">
                     <tr class="iransans">
-                        <th scope="col"><span>شماره</span></th>
-                        <th scope="col"><span>پرسنل</span></th>
-                        <th scope="col"><span>کد ملی</span></th>
+                        <th scope="col" style="width: 70px" data-sortas="numeric"><span>شماره</span></th>
+                        <th scope="col" style="width: 130px"><span>پرسنل</span></th>
+                        <th scope="col" style="width: 100px"><span>کد ملی</span></th>
                         <th scope="col"><span>سازمان</span></th>
                         <th scope="col"><span>قرارداد</span></th>
-                        <th scope="col"><span>نوع</span></th>
-                        <th scope="col"><span>توسط</span></th>
-                        <th scope="col"><span>تاریخ ثبت</span></th>
-                        <th scope="col"><span>تاریخ ویرایش</span></th>
+                        <th scope="col" style="width: 110px"><span>نوع</span></th>
+                        <th scope="col" style="width: 120px"><span>توسط</span></th>
+                        <th scope="col" style="width: 100px"><span>تاریخ ثبت</span></th>
+                        <th scope="col" style="width: 100px"><span>تاریخ ویرایش</span></th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr class="iransans pointer-cursor" :class="request.is_read === 0 ? 'unread' : null" v-for="(request,index) in employee_requests" data-bs-toggle="modal" data-bs-target="#request_details_modal" v-on:click="GetRequestDetails(request.id)">
-                        <td><span>@{{ request.id }}</span></td>
+                        <td>@{{ request.id }}</td>
                         <td><span>@{{ request.employee.name }}</span></td>
                         <td><span>@{{ request.employee.national_code }}</span></td>
                         <td><span>@{{ request.employee.contract.organization.name }}</span></td>
@@ -59,6 +61,25 @@
                         <td><span>@{{ PersianDateString(request.updated_at) }}</span></td>
                     </tr>
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    @{{ employee_requests.length }}
+                                </p>
+                                <p class="iransans white-color mb-0">
+                                    کسر از حقوق :
+                                    @{{ GetRequestKindCount("App\Models\LoanPaymentConfirmationApplication") }}
+                                </p>
+                                <p class="iransans white-color mb-0">
+
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

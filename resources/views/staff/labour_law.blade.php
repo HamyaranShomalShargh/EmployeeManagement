@@ -2,9 +2,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">تعرفه دستمزد پرسنل - قانون کار</h5>
-            <span>(ایجاد، جستجو و ویرایش)</span>
+            <h4 class="iransans d-inline-block m-0 fw-bolder">
+                تعرفه دستمزد پرسنل - قانون کار
+                <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
+            </h4>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -19,66 +20,71 @@
 @section('content')
     <div class="page-content w-100 p-3">
         <div class="input-group mb-2">
-            <button class="btn btn-outline-info d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_labour_law_modal">
-                <i class="fa fa-plus fa-1-4x me-1"></i>
-                <span class="iransans create-button">تعرفه جدید</span>
+            <button class="btn btn-primary d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_labour_law_modal">
+                <i class="fa fa-plus fa-1-6x"></i>
             </button>
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام سرفصل">
+            <input type="text" class="form-control text-center iransans" data-table="labour_law_table" placeholder="جستجو با نام و سال موثر" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table>
+                <table id="labour_law_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col"><span>شماره</span></th>
+                        <th scope="col" style="width: 80px" data-sortas="numeric"><span>شماره</span></th>
                         <th scope="col"><span>عنوان</span></th>
-                        <th scope="col"><span>سال مؤثر</span></th>
-                        <th scope="col"><span>توسط</span></th>
-                        <th scope="col"><span>تاریخ ثبت</span></th>
-                        <th scope="col"><span>تاریخ ویرایش</span></th>
-                        <th scope="col"><span>عملیات</span></th>
+                        <th scope="col" style="width: 120px"><span>سال مؤثر</span></th>
+                        <th scope="col" style="width: 150px"><span>توسط</span></th>
+                        <th scope="col" style="width: 150px"><span>تاریخ ثبت</span></th>
+                        <th scope="col" style="width: 150px"><span>تاریخ ویرایش</span></th>
+                        <th scope="col" style="width: 200px"><span>عملیات</span></th>
                     </tr>
                     </thead>
                     <tbody>
                     @forelse($labour_laws as $labour_law)
                         <tr>
-                            <td><span class="iransans">{{ $labour_law->id }}</span></td>
+                            <td class="iransans">{{ $labour_law->id }}</td>
                             <td><span class="iransans">{{ $labour_law->name }}</span></td>
                             <td><span class="iransans">{{ $labour_law->effective_year }}</span></td>
                             <td><span class="iransans">{{ $labour_law->user->name }}</span></td>
                             <td><span class="iransans">{{ verta($labour_law->cretaed_at)->format("Y/m/d") }}</span></td>
                             <td><span class="iransans">{{ verta($labour_law->updated_at)->format("Y/m/d") }}</span></td>
-                            <td class="position-relative">
-                                <div class="dropdown table-functions iransans">
-                                    <a class="table-functions-button dropdown-toggle border-0 iransans info-color" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-cog fa-1-2x"></i>
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        @can("edit", "LabourLaw")
-                                            <a role="button" href="{{ route("LabourLaw.edit",$labour_law->id) }}" class="dropdown-item">
-                                                <i class="fa fa-edit"></i>
-                                                <span class="iransans">ویرایش</span>
-                                            </a>
-                                        @endcan
-                                        @can("delete","LabourLaw")
-                                            <div class="dropdown-divider"></div>
+                            <td>
+                                <div class="d-flex flex-row flex-wrap align-items-center justify-content-center gap-2 gap-lg-3">
+                                    @can("edit", "LabourLaw")
+                                        <a role="button" href="{{ route("LabourLaw.edit",$labour_law->id) }}" class="btn btn-sm btn-outline-dark">
+                                            <i class="far fa-edit fa-1-2x vertical-middle"></i>
+                                        </a>
+                                    @endcan
+                                    @can("delete","LabourLaw")
+                                        <div>
                                             <form class="w-100" id="delete-form-{{ $labour_law->id }}" action="{{ route("LabourLaw.destroy",$labour_law->id) }}" method="POST" v-on:submit="submit_form">
                                                 @csrf
                                                 @method("Delete")
-                                                <button type="submit" form="delete-form-{{ $labour_law->id }}" class="dropdown-item">
-                                                    <i class="fa fa-trash"></i>
-                                                    <span class="iransans">حذف</span>
-                                                </button>
                                             </form>
-                                        @endcan
-                                    </div>
+                                            <button type="submit" form="delete-form-{{ $labour_law->id }}" class="btn btn-sm btn-outline-dark">
+                                                <i class="far fa-trash fa-1-2x vertical-middle"></i>
+                                            </button>
+                                        </div>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
                     @empty
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    {{ count($labour_laws) }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

@@ -37,7 +37,7 @@ class PreContractEmployeesExport extends StringValueBinder implements FromView,W
     }
     public function view(): View
     {
-        return view('excel.contract_employees');
+        return view('layouts.excel.contract_employees');
     }
 
     public function title(): string

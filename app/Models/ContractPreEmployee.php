@@ -5,6 +5,7 @@ namespace App\Models;
 use Hekmatinasser\Verta\Verta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ContractPreEmployee extends Model
@@ -170,5 +171,21 @@ class ContractPreEmployee extends Model
         $result["message"]["data"]["type"] = "refresh";
         $result["message"]["data"]["action"] = route("RefreshDataEmployees.index");
         return $result;
+    }
+    public static function find($keyword): \Illuminate\Database\Eloquent\Collection|array
+    {
+        $user_contracts = Contract::query()->where("user_id","=",Auth::id())->pluck("id");
+        $allowed_contracts = (User::UserType() == "staff" ? Organization::query()->where("inactive","=",0)->whereHas("contracts",function($query)use($user_contracts){
+            $query->where("contracts.inactive","=",0)->whereIn("contracts.id",$user_contracts);
+        })->whereHas("contracts.permitted_staffs",function($query){
+            $query->where("contract_user.staff_id","=",Auth::id());})->get() :
+            User::UserType() == "admin") ? Organization::query()->where("inactive","=",0)->whereHas("contracts",function($query){
+            $query->where("contracts.inactive","=",0);
+        })->get(): [];
+        return (User::UserType() == "staff" ? ContractPreEmployee::query()
+            ->whereIn("contract_id",$allowed_contracts()->pluck("contracts.*.id")->flatten()->unique())
+            ->where("name","like",$keyword)->orWhere("national_code","like",$keyword)->get() : User::UserType() == "admin") ?
+            ContractPreEmployee::query()
+                ->where("name","like",$keyword)->orWhere("national_code","like",$keyword)->get() : [];
     }
 }

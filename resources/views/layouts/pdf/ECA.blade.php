@@ -158,7 +158,7 @@
             <b>{{$application->automationable->data_array["active_contract"]["organization_name"]}}</b>
             مشغول بکار می باشد. این گواهی بنا به درخواست نامبرده جهت ارائه به آن مدیریت محترم صادر گردیده و فاقد هرگونه ارزش قانونی دیگری می باشد.
         </p>
-        @if(isset($sign) && count($sign) > 0)
+        @if(isset($sign["sign"]))
             <div class="sign-container">
                 <div class="sign_box">
                     <p class="sign_role mitra">{{$sign["role"]}}</p>

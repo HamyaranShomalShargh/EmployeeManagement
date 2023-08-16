@@ -2,9 +2,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">پروه سفارشی</h5>
-            <span>(ایجاد، جستجو و ویرایش)</span>
+            <h4 class="iransans d-inline-block m-0 fw-bolder">
+                گروه سفارشی
+                <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
+            </h4>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -19,33 +20,32 @@
 @section('content')
     <div class="page-content w-100 p-3">
         <div class="input-group mb-2">
-            <button class="btn btn-outline-info d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_custom_group_modal">
-                <i class="fa fa-plus fa-1-4x me-1"></i>
-                <span class="iransans create-button">متن جدید</span>
+            <button class="btn btn-primary d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_custom_group_modal">
+                <i class="fa fa-plus fa-1-6x"></i>
             </button>
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام گروه">
+            <input type="text" class="form-control text-center iransans" data-table="groups_table" placeholder="جستجو با نام گروه" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table>
+                <table id="groups_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col"><span>شماره</span></th>
+                        <th scope="col" style="width: 80px;" data-sortas="numeric"><span>شماره</span></th>
                         <th scope="col"><span>عنوان</span></th>
-                        <th scope="col"><span>تعداد پرسنل</span></th>
-                        <th scope="col"><span>مشخصه</span></th>
-                        <th scope="col"><span>وضعیت</span></th>
-                        <th scope="col"><span>توسط</span></th>
-                        <th scope="col"><span>تاریخ ثبت</span></th>
-                        <th scope="col"><span>تاریخ ویرایش</span></th>
-                        <th scope="col"><span>عملیات</span></th>
+                        <th scope="col" style="width: 80px"><span>پرسنل</span></th>
+                        <th scope="col" style="width: 120px"><span>مشخصه</span></th>
+                        <th scope="col" style="width: 70px;"><span>وضعیت</span></th>
+                        <th scope="col" style="width: 150px;"><span>توسط</span></th>
+                        <th scope="col" style="width: 120px;"><span>تاریخ ثبت</span></th>
+                        <th scope="col" style="width: 120px;"><span>تاریخ ویرایش</span></th>
+                        <th scope="col" style="width: 150px;"><span>عملیات</span></th>
                     </tr>
                     </thead>
                     <tbody>
                     @forelse($groups as $group)
                         <tr>
-                            <td><span class="iransans">{{ $group->id }}</span></td>
+                            <td class="iransans">{{ $group->id }}</td>
                             <td><span class="iransans">{{ $group->name }}</span></td>
                             <td><span class="iransans">{{ count($group->employees) }}</span></td>
                             <td><span class="iransans pt-1 pb-1 ps-5 pe-5" style="background-color: {{ $group->color }}">تست</span></td>
@@ -61,49 +61,64 @@
                             <td><span class="iransans">{{ $group->user->name }}</span></td>
                             <td><span class="iransans">{{ verta($group->cretaed_at)->format("Y/m/d") }}</span></td>
                             <td><span class="iransans">{{ verta($group->updated_at)->format("Y/m/d") }}</span></td>
-                            <td class="position-relative">
-                                <div class="dropdown table-functions iransans">
-                                    <a class="table-functions-button dropdown-toggle border-0 iransans info-color" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-cog fa-1-2x"></i>
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <form class="w-100" id="activation-form-{{ $group->id }}" action="{{ route("CustomGroups.activation",$group->id) }}" method="POST" v-on:submit="submit_form">
-                                            @csrf
-                                            <button type="submit" form="activation-form-{{ $group->id }}" class="dropdown-item">
+                            <td>
+                                <div class="d-flex flex-row flex-wrap align-items-center justify-content-center gap-2 gap-lg-3">
+                                    @can("activation", "CustomGroups")
+                                        <div>
+                                            <form hidden="" id="activation-form-{{ $group->id }}" action="{{ route("CustomGroups.activation",$group->id) }}" method="POST" v-on:submit="submit_form">
+                                                @csrf
+                                            </form>
+                                            <button type="submit" form="activation-form-{{ $group->id }}" class="btn btn-sm btn-outline-dark">
                                                 @if($group->inactive == 0)
-                                                    <i class="fa fa-lock"></i>
-                                                    <span>غیر فعال سازی</span>
+                                                    <i class="far fa-lock fa-1-2x vertical-middle"></i>
                                                 @elseif($group->inactive == 1)
-                                                    <i class="fa fa-lock-open"></i>
-                                                    <span>فعال سازی</span>
+                                                    <i class="far fa-lock-open fa-1-2x vertical-middle"></i>
                                                 @endif
                                             </button>
-                                        </form>
-                                        @can("edit", "CustomGroups")
-                                            <div class="dropdown-divider"></div>
-                                            <a role="button" href="{{ route("CustomGroups.edit",$group->id) }}" class="dropdown-item">
-                                                <i class="fa fa-edit"></i>
-                                                <span class="iransans">ویرایش</span>
-                                            </a>
-                                        @endcan
-                                        @can("delete","CustomGroups")
-                                            <div class="dropdown-divider"></div>
+                                        </div>
+                                    @endcan
+                                    @can("edit", "CustomGroups")
+                                        <a role="button" href="{{ route("CustomGroups.edit",$group->id) }}" class="btn btn-sm btn-outline-dark">
+                                            <i class="far fa-edit fa-1-2x vertical-middle"></i>
+                                        </a>
+                                    @endcan
+                                    @can("delete","CustomGroups")
+                                        <div>
                                             <form class="w-100" id="delete-form-{{ $group->id }}" action="{{ route("CustomGroups.destroy",$group->id) }}" method="POST" v-on:submit="submit_form">
                                                 @csrf
                                                 @method("Delete")
-                                                <button type="submit" form="delete-form-{{ $group->id }}" class="dropdown-item">
-                                                    <i class="fa fa-trash"></i>
-                                                    <span class="iransans">حذف</span>
-                                                </button>
                                             </form>
-                                        @endcan
-                                    </div>
+                                            <button type="submit" form="delete-form-{{ $group->id }}" class="btn btn-sm btn-outline-dark">
+                                                <i class="far fa-trash fa-1-2x vertical-middle"></i>
+                                            </button>
+                                        </div>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
                     @empty
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    {{ count($groups) }}
+                                </p>
+                                <p class="iransans white-color mb-0">
+                                    فعال :
+                                    {{  count($groups->where("inactive",0)) }}
+                                </p>
+                                <p class="iransans white-color mb-0">
+                                    غیر فعال :
+                                    {{ count($groups->where("inactive",1)) }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

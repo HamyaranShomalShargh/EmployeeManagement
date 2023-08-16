@@ -1,16 +1,17 @@
-
+@extends("staff.staff_dashboard")
 @section('variables')
     <script>
         const allowed_organizations = @json($organizations);
-        const allowed_contracts = @json($contracts);
+        {{--const allowed_contracts = @json($contracts);--}}
     </script>
-@endsection@extends("staff.staff_dashboard")
+@endsection
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">اطلاعات مالی احکام کارگزینی پرسنل</h5>
-            <span>(ایجاد، جستجو و ویرایش)</span>
+            <h4 class="iransans d-inline-block m-0 fw-bolder">
+                مقادیر مالی احکام کارگزینی
+                <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
+            </h4>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -37,23 +38,21 @@
             <button class="btn btn-outline-danger d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#delete_all_modal">
                 <i class="fa fa-trash-can fa-1-7x"></i>
             </button>
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام و کد ملی">
+            <input type="text" class="form-control text-center iransans" data-table="financials_table" placeholder="جستجو با نام و کد ملی" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table>
+                <table id="financials_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2,3]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col"><span>شماره</span></th>
+                        <th scope="col" style="width: 100px"><span>شماره</span></th>
                         <th scope="col"><span>نام</span></th>
-                        <th scope="col"><span>سازمان</span></th>
-                        <th scope="col"><span>قراداد</span></th>
-                        <th scope="col"><span>سال مؤثر</span></th>
-                        <th scope="col"><span>توسط</span></th>
-                        <th scope="col"><span>تاریخ ثبت</span></th>
-                        <th scope="col"><span>تاریخ ویرایش</span></th>
-                        <th scope="col"><span>عملیات</span></th>
+                        <th scope="col" style="width: 110px"><span>سال مؤثر</span></th>
+                        <th scope="col" style="width: 150px"><span>توسط</span></th>
+                        <th scope="col" style="width: 150px"><span>تاریخ ثبت</span></th>
+                        <th scope="col" style="width: 150px"><span>تاریخ ویرایش</span></th>
+                        <th scope="col" style="width: 200px"><span>عملیات</span></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -61,43 +60,51 @@
                         <tr>
                             <td><span class="iransans">{{ $employee->id }}</span></td>
                             <td><span class="iransans">{{ $employee->employee->name }}</span></td>
-                            <td><span class="iransans">{{ $employee->employee->contract->organization->name }}</span></td>
-                            <td><span class="iransans">{{ $employee->employee->contract->name }}</span></td>
                             <td><span class="iransans">{{ $employee->effective_year }}</span></td>
                             <td><span class="iransans">{{ $employee->user->name }}</span></td>
                             <td><span class="iransans">{{ verta($employee->cretaed_at)->format("Y/m/d") }}</span></td>
                             <td><span class="iransans">{{ verta($employee->updated_at)->format("Y/m/d") }}</span></td>
-                            <td class="position-relative">
-                                <div class="dropdown table-functions iransans">
-                                    <a class="table-functions-button dropdown-toggle border-0 iransans info-color" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-cog fa-1-2x"></i>
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        @can("edit", "EmployeeFinancialAdvantages")
-                                            <a role="button" href="{{ route("EmployeeFinancialAdvantages.edit",$employee->id) }}" class="dropdown-item">
-                                                <i class="fa fa-edit"></i>
-                                                <span class="iransans">ویرایش</span>
-                                            </a>
-                                        @endcan
-                                            @can("delete","EmployeeFinancialAdvantages")
-                                                <div class="dropdown-divider"></div>
-                                                <form class="w-100" id="delete-form-{{ $employee->id }}" action="{{ route("EmployeeFinancialAdvantages.destroy",$employee->id) }}" method="POST" v-on:submit="submit_form">
+                            <td>
+                                <div class="d-flex flex-row flex-wrap align-items-center justify-content-center gap-2 gap-lg-3">
+                                    @can("edit", "EmployeeFinancialAdvantages")
+                                        <a role="button" href="{{ route("EmployeeFinancialAdvantages.edit",$employee->id) }}" class="btn btn-sm btn-outline-dark">
+                                            <i class="far fa-edit fa-1-2x vertical-middle"></i>
+                                        </a>
+                                    @endcan
+                                        @can("delete","EmployeeFinancialAdvantages")
+                                            <div>
+                                                <form hidden id="delete-form-{{ $employee->id }}" action="{{ route("EmployeeFinancialAdvantages.destroy",$employee->id) }}" method="POST" v-on:submit="submit_form">
                                                     @csrf
                                                     @method("Delete")
-                                                    <button type="submit" form="delete-form-{{ $employee->id }}" class="dropdown-item">
-                                                        <i class="fa fa-trash"></i>
-                                                        <span class="iransans">حذف</span>
-                                                    </button>
                                                 </form>
-                                            @endcan
-                                    </div>
+                                                <button type="submit" form="delete-form-{{ $employee->id }}" class="btn btn-sm btn-outline-dark">
+                                                    <i class="fa fa-trash fa-1-2x vertical-middle"></i>
+                                                </button>
+                                            </div>
+                                        @endcan
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="11"><span class="iransans">اطلاعاتی یافت نشد!</span></td></tr>
+                        @if($query)
+                            <tr><td colspan="7"><span class="iransans">اطلاعاتی در این سال وجود ندارد</span></td></tr>
+                        @else
+                            <tr><td colspan="7"><span class="iransans">در انتظار انتخاب قرارداد...</span></td></tr>
+                        @endif
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    {{ count($employees) }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -108,11 +115,11 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title iransans">انتخاب پرسنل برای نمایش در جدول</h5>
+                    <h6 class="modal-title iransans">جستجو در اطلاعات</h6>
                 </div>
                 <div class="modal-body scroll-style">
                     <div class="row">
-                        <form id="search_form" class="p-3" action="{{ route("EmployeeFinancialAdvantages.index") }}" method="get">
+                        <form id="search_form" class="p-3" action="{{ route("EmployeeFinancialAdvantages.query") }}" method="post">
                             @csrf
                             <div class="col-12 mb-3">
                                 <label class="form-label iransans mb-1">سازمان</label>
@@ -121,8 +128,9 @@
                             <div class="col-12 mb-3">
                                 <label class="form-label iransans mb-1">سال مؤثر</label>
                                 <select class="form-control iransans selectpicker-select" name="effective_year">
-                                    <option value="{{ verta()->subYear()->format("Y") }}">{{ verta()->subYear()->format("Y") }}</option>
-                                    <option selected value="{{ verta()->format("Y") }}">{{ verta()->format("Y") }}</option>
+                                    @for($i = 5; $i >= 0; $i--)
+                                        <option @if(verta()->format("Y") == verta()->subYears($i)->format("Y")) selected @endif value="{{ verta()->subYears($i)->format("Y") }}">{{ verta()->subYears($i)->format("Y") }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <input hidden v-model="contract_id" name="contract_id">
@@ -132,7 +140,7 @@
                 <div class="modal-footer">
                     <button v-if="contract_id !== ''" type="submit" form="search_form" class="btn btn-success iransans">
                         <i class="fa fa-search fa-1-2x me-1"></i>
-                        <span class="iransans">ادامه</span>
+                        <span class="iransans">جستجو</span>
                     </button>
                     <button type="button" class="btn btn-outline-secondary iransans" data-bs-dismiss="modal">
                         <i class="fa fa-times fa-1-2x me-1"></i>
@@ -146,7 +154,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title iransans">حذف کلی اطلاعات مالی احکام کارگزینی</h5>
+                    <h6 class="modal-title iransans">حذف کلی اطلاعات مالی احکام کارگزینی</h6>
                 </div>
                 <div class="modal-body scroll-style">
                     <div class="row">
@@ -160,8 +168,9 @@
                             <div class="col-12 mb-3">
                                 <label class="form-label iransans mb-1">سال مؤثر</label>
                                 <select class="form-control iransans selectpicker-select" name="effective_year">
-                                    <option value="{{ verta()->subYear()->format("Y") }}">{{ verta()->subYear()->format("Y") }}</option>
-                                    <option selected value="{{ verta()->format("Y") }}">{{ verta()->format("Y") }}</option>
+                                    @for($i = 5; $i >= 0; $i--)
+                                        <option @if(verta()->format("Y") == verta()->subYears($i)->format("Y")) selected @endif value="{{ verta()->subYears($i)->format("Y") }}">{{ verta()->subYears($i)->format("Y") }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <input hidden v-model="contract_id" name="contract_id">
@@ -185,7 +194,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title iransans">بارگذاری اطلاعات مالی حکم کارگزینی(فردی)</h5>
+                    <h6 class="modal-title iransans">بارگذاری اطلاعات مالی حکم کارگزینی(فردی)</h6>
                 </div>
                 <div class="modal-body">
                     <form id="solo_main_submit_form" action="{{route("EmployeeFinancialAdvantages.store_solo")}}" method="post" data-json="advantage_columns" v-on:submit="submit_form">
@@ -224,8 +233,9 @@
                             <div v-if="employee.length !== 0" class="col-12 col-lg-6 mb-2">
                                 <label class="form-label iransans mb-1">سال مؤثر</label>
                                 <select class="form-control iransans selectpicker-select" name="effective_year">
-                                    <option value="{{ verta()->subYear()->format("Y") }}">{{ verta()->subYear()->format("Y") }}</option>
-                                    <option selected value="{{ verta()->format("Y") }}">{{ verta()->format("Y") }}</option>
+                                    @for($i = 5; $i >= 0; $i--)
+                                        <option @if(verta()->format("Y") == verta()->subYears($i)->format("Y")) selected @endif value="{{ verta()->subYears($i)->format("Y") }}">{{ verta()->subYears($i)->format("Y") }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <div v-if="employee.length !== 0" class="col-12 mb-2">
@@ -271,7 +281,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title iransans">بارگذاری اطلاعات مالی حکم کارگزینی(گروهی)</h5>
+                    <h6 class="modal-title iransans">بارگذاری اطلاعات مالی حکم کارگزینی(گروهی)</h6>
                 </div>
                 <div class="modal-body">
                     <div class="row">
@@ -284,12 +294,12 @@
                                 انتخاب فایل اکسل
                                 <a href="{{route("EmployeeFinancialAdvantages.excel_download")}}" class="iransans">(دانلود قالب)</a>
                             </label>
-                            <s-file-browser @file_selected="file_selected = true" @file_deselected="file_selected = false" :accept='["xls","xlsx"]' :size="800000"></s-file-browser>
+                            <s-file-browser :accept='["xls","xlsx"]' :size="800000"></s-file-browser>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-menu">
-                    <button v-if="file_selected" type="button" class="btn btn-success iransans" v-on:click="UploadEmployeeAdvantages">
+                    <button type="button" class="btn btn-success iransans" v-on:click="UploadEmployeeAdvantages">
                         <i class="fa fa-upload fa-1-2x me-1"></i>
                         <span class="iransans">بارگذاری فایل</span>
                     </button>
@@ -313,7 +323,7 @@
         <div class="modal-dialog modal-fullscreen modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title iransans">اطلاعات بارگذاری شده پرسنل</h5>
+                    <h6 class="modal-title iransans">اطلاعات بارگذاری شده پرسنل</h6>
                 </div>
                 <div class="modal-body">
                     <input type="text" class="form-control iranyekan text-center mb-3" placeholder="جستجو با نام و نام خانوادگی و کد ملی" data-table="employee_advantages_table" v-on:input="filter_table">
@@ -357,7 +367,7 @@
                     </button>
                     <button v-if="employee_advantages.length > 0" type="button" class="btn btn-success iransans" data-bs-toggle="modal" data-bs-target="#select_date_modal">
                         <i class="fa fa-check-double fa-1-2x me-1"></i>
-                        <span class="iransans">تایید اطلاعات و انتخاب سال موثر</span>
+                        <span class="iransans">تایید و انتخاب سال موثر</span>
                     </button>
                     <button type="button" class="btn btn-outline-secondary iransans" data-bs-toggle="modal" data-bs-target="#new_advantage_modal">
                         <i class="fa fa-times fa-1-2x me-1"></i>
@@ -371,7 +381,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title iransans">خطا(های) بارگذاری فایل اکسل</h5>
+                    <h6 class="modal-title iransans">خطا(های) بارگذاری فایل اکسل</h6>
                 </div>
                 <div class="modal-body" style="max-height: 70vh;overflow-y: auto">
                     <table class="table table-striped">
@@ -392,7 +402,7 @@
                     </table>
                 </div>
                 <div class="modal-footer bg-menu">
-                    <button type="button" class="btn btn-outline-secondary iransans" data-bs-toggle="modal" :data-bs-target="return_modal" v-on:click="return_modal=''">
+                    <button type="button" class="btn btn-outline-secondary iransans" data-bs-toggle="modal" data-bs-target="#new_advantage_modal">
                         <i class="fa fa-times fa-1-2x me-1"></i>
                         <span class="iransans">انصراف</span>
                     </button>
@@ -404,7 +414,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title iransans">انتخاب سال مؤثر</h5>
+                    <h6 class="modal-title iransans">انتخاب سال مؤثر</h6>
                 </div>
                 <div class="modal-body">
                     <form id="main_submit_form" class="p-3" action="{{ route("EmployeeFinancialAdvantages.store") }}" method="POST" :data-json="JSON.stringify(['employee_advantages','advantage_columns'])" v-on:submit="submit_form">
@@ -413,8 +423,9 @@
                             <div class="col-12 mb-3">
                                 <label class="form-label iransans">سال مؤثر در تاریخ شروع قرارداد</label>
                                 <select class="form-control iransans selectpicker-select" name="year">
-                                    <option value="{{ verta()->subYear()->format("Y") }}">{{ verta()->subYear()->format("Y") }}</option>
-                                    <option selected value="{{ verta()->format("Y") }}">{{ verta()->format("Y") }}</option>
+                                    @for($i = 5; $i >= 0; $i--)
+                                        <option @if(verta()->format("Y") == verta()->subYears($i)->format("Y")) selected @endif value="{{ verta()->subYears($i)->format("Y") }}">{{ verta()->subYears($i)->format("Y") }}</option>
+                                    @endfor
                                 </select>
                             </div>
                         </div>

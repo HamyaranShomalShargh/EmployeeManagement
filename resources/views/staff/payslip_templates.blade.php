@@ -1,4 +1,4 @@
-
+@extends("staff.staff_dashboard")
 @section('variables')
     <script>
         const allowed_organizations = @json($organizations);
@@ -8,13 +8,14 @@
             const excel_columns_data = @json(json_decode(old("excel_columns"),true));
         </script>
     @endif
-@endsection@extends("staff.staff_dashboard")
+@endsection
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">قالب فیش حقوقی</h5>
-            <span>(ایجاد، جستجو و ویرایش)</span>
+            <h4 class="iransans d-inline-block m-0 fw-bolder">
+                قالب فیش حقوقی
+                <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
+            </h4>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -29,64 +30,74 @@
 @section('content')
     <div class="page-content w-100 p-3">
         <div class="input-group mb-2">
-            <button class="btn btn-outline-info d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_template_modal">
-                <i class="fa fa-plus fa-1-4x me-1"></i>
-                <span class="iransans create-button">قالب جدید</span>
+            <button class="btn btn-primary d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_template_modal">
+                <i class="fa fa-plus fa-1-6x"></i>
             </button>
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام قالب">
+            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام سازمان و قرارداد" data-table="payslip_templates_table" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table>
+                <table id="payslip_templates_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col"><span>شماره</span></th>
+                        <th scope="col" style="width: 70px;" data-sortas="numeric"><span>شماره</span></th>
+                        <th scope="col"><span>سازمان</span></th>
                         <th scope="col"><span>قرارداد</span></th>
-                        <th scope="col"><span>توسط</span></th>
-                        <th scope="col"><span>تاریخ ثبت</span></th>
-                        <th scope="col"><span>تاریخ ویرایش</span></th>
-                        <th scope="col"><span>عملیات</span></th>
+                        <th scope="col" style="width: 150px"><span>توسط</span></th>
+                        <th scope="col" style="width: 150px"><span>تاریخ ثبت</span></th>
+                        <th scope="col" style="width: 150px"><span>تاریخ ویرایش</span></th>
+                        <th scope="col" style="width: 150px"><span>عملیات</span></th>
                     </tr>
                     </thead>
                     <tbody>
                     @forelse($templates as $template)
                         <tr>
-                            <td><span class="iransans">{{ $template->id }}</span></td>
+                            <td class="iransans">{{ $template->id }}</td>
+                            <td><span class="iransans">{{ $template->contract->organization->name }}</span></td>
                             <td><span class="iransans">{{ $template->contract->name }}</span></td>
                             <td><span class="iransans">{{ $template->user->name }}</span></td>
                             <td><span class="iransans">{{ verta($template->cretaed_at)->format("Y/m/d") }}</span></td>
                             <td><span class="iransans">{{ verta($template->updated_at)->format("Y/m/d") }}</span></td>
-                            <td class="position-relative">
-                                <div class="dropdown table-functions iransans">
-                                    <a class="table-functions-button dropdown-toggle border-0 iransans info-color" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-cog fa-1-2x"></i>
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        @can("edit", "PaySlipTemplates")
-                                            <a role="button" href="{{ route("PaySlipTemplates.edit",$template->id) }}" class="dropdown-item">
-                                                <i class="fa fa-edit"></i>
-                                                <span class="iransans">ویرایش</span>
-                                            </a>
-                                        @endcan
-                                        @can("delete","PaySlipTemplates")
-                                            <div class="dropdown-divider"></div>
-                                            <form class="w-100" id="delete-form-{{ $template->id }}" action="{{ route("PaySlipTemplates.destroy",$template->id) }}" method="POST" v-on:submit="submit_form">
+                            <td>
+                                <div class="d-flex flex-row flex-wrap align-items-center justify-content-center gap-2 gap-lg-3">
+                                    @can("edit", "PaySlipTemplates")
+                                        <a role="button" class="btn btn-sm btn-outline-dark" href="{{ route("PaySlipTemplates.edit",$template->id) }}">
+                                            <i class="far fa-edit fa-1-2x vertical-middle"></i>
+                                        </a>
+                                    @endcan
+                                    @can("delete","PaySlipTemplates")
+                                        <div>
+                                            <form hidden="" id="delete-form-{{ $template->id }}" action="{{ route("PaySlipTemplates.destroy",$template->id) }}" method="POST" v-on:submit="submit_form">
                                                 @csrf
                                                 @method("Delete")
-                                                <button type="submit" form="delete-form-{{ $template->id }}" class="dropdown-item">
-                                                    <i class="fa fa-trash"></i>
-                                                    <span class="iransans">حذف</span>
-                                                </button>
                                             </form>
-                                        @endcan
-                                    </div>
+                                            <button type="submit" form="delete-form-{{ $template->id }}" class="btn btn-sm btn-outline-dark">
+                                                <i class="far fa-trash fa-1-2x vertical-middle"></i>
+                                            </button>
+                                        </div>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
                     @empty
+                        <tr>
+                            <td colspan="7" class="iransans">اطلاعاتی وجود ندارد</td>
+                        </tr>
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    {{ count($templates) }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -116,12 +127,7 @@
                             <div class="col-12 mb-3">
                                 <label v-if="excel_columns.length === 0" class="form-label iransans">تعداد کل ستون های مورد نیاز</label>
                                 <label v-if="excel_columns.length > 0" class="form-label iransans">افزایش / کاهش (به انتها و از انتها)</label>
-                                <div v-if="excel_columns.length === 0" class="input-group">
-                                    <input type="number" class="form-control text-center iransans" v-model="last_excel_column">
-                                    <button type="button" class="btn btn-sm btn-primary iransans input-group-append ps-5 pe-5" v-on:click="ExcelColumnsCreation">
-                                        ادامه
-                                    </button>
-                                </div>
+                                <input v-if="excel_columns.length === 0" type="number" class="form-control text-center iransans" v-model="last_excel_column">
                                 <div v-if="excel_columns.length > 0" class="input-group">
                                     <input type="number" maxlength="702" class="form-control text-center iransans" v-model="add_remove_excel_column">
                                     <button type="button" class="btn btn-sm btn-outline-primary input-group-append ps-3 pe-3" v-on:click="ExcelColumnsNumber('increase')">
@@ -157,7 +163,7 @@
                                             <tr class="iransans" v-for="(column,index) in excel_columns" :key="index">
                                                 <td><span style="font-size:18px;font-weight: 700">@{{ column.column }}</span></td>
                                                 <td>
-                                                    <input :disabled="column.ignore || parseInt(excel_column_index) === index" type="text" class="form-control iransans text-center" placeholder="عنوان" v-model="parseInt(excel_column_index) === index ? column.title = 'کد ملی' : column.title = ''">
+                                                    <input :disabled="column.ignore || parseInt(excel_column_index) === index" type="text" class="form-control iransans text-center" placeholder="عنوان" v-model="parseInt(excel_column_index) === index ? column.title = 'کد ملی' : column.title">
                                                 </td>
                                                 <td>
                                                     <select :disabled="column.ignore || parseInt(excel_column_index) === index" class="form-control iransans" v-model="column.type">
@@ -169,7 +175,7 @@
                                                 </td>
                                                 <td>
                                                     <div class="form-check form-check-inline">
-                                                        <input :disabled="column.ignore || parseInt(excel_column_index) === index" class="form-check-input" type="checkbox" :id="`isNumber${index}`" :value="parseInt(excel_column_index) !== index" v-model="parseInt(excel_column_index) !== index ? column.isNumber = true : column.isNumber = false">
+                                                        <input :disabled="column.ignore || parseInt(excel_column_index) === index" class="form-check-input" type="checkbox" :id="`isNumber${index}`" :value="true" v-model="column.isNumber">
                                                         <label class="form-check-label iransans" :for="`isNumber${index}`">مقدار عددی</label>
                                                     </div>
                                                     <div class="form-check form-check-inline">
@@ -187,6 +193,9 @@
                     </form>
                 </div>
                 <div class="modal-footer bg-menu">
+                    <button v-show="excel_columns.length === 0" type="button" class="btn btn-primary iransans" v-on:click="ExcelColumnsCreation">
+                        ایجاد جدول
+                    </button>
                     <button v-if="excel_columns.length > 0" type="submit" form="main_submit_form" class="btn btn-success submit_button">
                         <i class="submit_button_icon fa fa-check fa-1-2x me-1"></i>
                         <span class="iransans">ارسال و ذخیره</span>

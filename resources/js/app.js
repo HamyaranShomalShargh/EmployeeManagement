@@ -20,6 +20,7 @@ import fancyTable from 'jquery.fancytable';
 window.fancyTable = fancyTable;
 import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import Chart from 'chart.js/auto';
+import {alert} from "../../public_html/js/app";
 let locale = {
     OK: 'قبول',
     CONFIRM: 'تایید',
@@ -183,22 +184,11 @@ const app = new Vue({
         UserMessage: "",
         UserPayslips: typeof user_payslips_data !== "undefined" ? user_payslips_data : [],
         UserPayslip: [],
-        UserPayslipDetails: []
+        UserPayslipDetails: [],
+        EmployeesFound: [],
+        RegistrationFound: []
     },
     computed: {
-        AllEmployees(){
-            if (this.user_allowed_contracts.length) {
-                let employees = [];
-                this.user_allowed_contracts.forEach((organization) => {
-                    organization.contracts.forEach((contract) => {
-                        contract.employees.forEach((employee) => {
-                            employees.push(employee);
-                        });
-                    });
-                });
-                return employees;
-            }
-        },
         MainExcelColumns(){
             const columns = [];
             const letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
@@ -457,8 +447,9 @@ const app = new Vue({
         }
         if (this.is_static_sidebar === 0 && this.sidebar_toggle === false)
             $(".information-box,.content-header,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").addClass("small-sidebar");
+        const self = this;
         $(document).ready(function (){
-            const self = this;
+            console.log(self);
             String.prototype.toEnglishDigits = function() {
                 return this.replace(/[۰-۹]/g, (chr) => {
                     let persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -478,6 +469,45 @@ const app = new Vue({
                     $(this).closest("div").find(".dropdown-toggle").removeClass("is-invalid-select");
                 });
             }
+            $(".find-employees").find("input[type='search']").on("input",(e) => {
+                const keyword = e.target.value;
+                self.EmployeesFound = []; self.RegistrationFound = [];
+                if (keyword.length > 2) {
+                    axios.post(route("EmployeesManagement.find_employees"), {"keyword": keyword})
+                        .then(function (response) {
+                            if (response?.data) {
+                                switch (response.data.result) {
+                                    case "success": {
+                                        if (response.data?.employees)
+                                            self.EmployeesFound = response.data.employees;
+                                        else if(response.data?.registration)
+                                            self.RegistrationFound = response.data?.registration;
+                                        else
+                                            self.EmployeesFound = []; self.RegistrationFound = [];
+                                        self.$nextTick(function (){
+                                            const select = $(".find-employees-select");
+                                            select.selectpicker('refresh');
+                                        });
+                                        break;
+                                    }
+                                    case "fail": {
+                                        alertify.notify(response.data["message"], 'error', "30");
+                                        break;
+                                    }
+                                }
+                            }
+                        }).catch(function (error) {
+                        alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
+                    });
+                }
+                else{
+                    self.EmployeesFound = []; self.RegistrationFound = [];
+                    self.$nextTick(function (){
+                        const select = $(".find-employees-select");
+                        select.selectpicker('refresh');
+                    });
+                }
+            });
             this.MoneySeparator = $(".thousand_separator").length ? new AutoNumeric.multiple('.thousand_separator',['integer',{'digitGroupSeparator':',','watchExternalChanges':true}]) : null;
             let date_masked = $(".date_masked");
             if (date_masked.length) {
@@ -576,23 +606,13 @@ const app = new Vue({
             });
             if ($(".table-scroll").length){
                 let table = document.getElementsByClassName('table-scroll');
-                if ($(table).hasClass("fixed"))
-                    $(table).css("max-height",`calc(100vh - ${document.getElementById("table-scroll-container").offsetTop}px)`);
-                else
-                    $(table).css("max-height",`calc(100vh - 50px - ${document.getElementById("table-scroll-container").offsetTop}px)`);
+                $(table).css("max-height",`calc(100vh - ${document.getElementById("table-scroll-container").offsetTop}px - 15px)`);
             }
-            $(".table-functions").on('show.bs.dropdown', function () {
-                let table = document.getElementsByClassName('table-scroll');
-                let menu = $(this).closest("td").find(".dropdown-menu");
-                $(table).css("min-height",(parseInt($(menu).css("height")) + parseInt($(table).css("height"))).toString() + "px");
-            }).on('hide.bs.dropdown', function () {
-                $('.table-scroll').css("min-height","auto");
-            });
         });
         window.addEventListener("resize",function (){
             let table = document.getElementsByClassName('table-scroll');
-            if ($(".table-scroll").length)
-                $(table).css("max-height",`calc(100vh - 75px - ${document.getElementById("table-scroll-container").offsetTop}px)`);
+            $(table).css("max-height",`calc(100vh - ${document.getElementById("table-scroll-container").offsetTop}px - 15px)`);
+            console.log(document.getElementById("table-scroll-container").offsetTop);
             const self = this;
             if($(window).innerWidth() <= 900) {
                 self.sidebar_toggle = true;
@@ -1020,10 +1040,29 @@ const app = new Vue({
         },
         GetGroupEmployees(e){
             const self = this;
+            const id = e.target.value;
             self.table_data_records = [];
-            this.user_allowed_groups[parseInt(e.target.value)]?.employees.forEach((item) => {
-                self.table_data_records.push(item.employee);
-                self.$forceUpdate();
+            self.$nextTick(function (){
+                $("#group_reference").selectpicker('val','').selectpicker('render');
+            });
+            self.show_loading = true;
+            axios.post(route("EmployeesManagement.get_employees"), {"reference_type":"group","reference_id":id}).then(function (response) {
+                self.show_loading = false;
+                if (response.data){
+                    switch (response.data.result){
+                        case "success":{
+                            self.table_data_records = response.data.employees;
+                            break;
+                        }
+                        case "fail": {
+                            alertify.notify(response.data.message, 'error', "30");
+                            break;
+                        }
+                    }
+                }
+            }).catch(function (error) {
+                self.show_loading = false;
+                alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
             });
         },
         add_subset(){
@@ -1071,14 +1110,16 @@ const app = new Vue({
         },
         AdvancedEmployeeSearch(e){
             const id = parseInt(e.target.value);
-            this.user_allowed_contracts.forEach((organization) => {
-                organization.contracts.forEach((contract) => {
-                    contract.employees.forEach((employee) => {
-                        if (employee.id === id)
-                            this.table_data_records = [employee];
-                    });
+            if (id){
+                this.EmployeesFound.find((employee) => {
+                    if (employee.id === id)
+                        this.table_data_records = [employee];
                 });
-            });
+                this.EmployeesFound = [];
+                this.$nextTick(() => {
+                    $(".find-employees-select").selectpicker('destroy').selectpicker('render');
+                });
+            }
         },
         ExcelColumnsCreation(){
             const self = this;
@@ -1258,17 +1299,29 @@ const app = new Vue({
         SoloContractSelected(id){
             const self = this;
             self.employee = [];
-            self.user_allowed_contracts.forEach((organization) => {
-                organization.contracts.forEach((contract) => {
-                    if (contract.id === parseInt(id)) {
-                        self.employees = contract.employees;
-                        self.$forceUpdate();
-                        self.$nextTick(() => {
-                            $("#employees").selectpicker('destroy').selectpicker('render');
-                        });
+            self.advantage_columns = [];
+            self.show_loading = true;
+            axios.post(route("EmployeeFinancialAdvantages.get_employees"), {"contract_id":id}).then(function (response) {
+                self.show_loading = false;
+                if (response.data){
+                    switch (response.data.result){
+                        case "success":{
+                            self.employees = response.data?.employees;
+                            self.$nextTick(() => {
+                                $("#employees").selectpicker('refresh');
+                            });
+                            break;
+                        }
+                        case "fail": {
+                            alertify.notify(response.data.message, 'error', "30");
+                            break;
+                        }
                     }
-                });
-            })
+                }
+            }).catch(function (error) {
+                self.show_loading = false;
+                alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
+            });
         },
         SelectEmployee(e){
             this.employee = this.employees.find(employee => {
@@ -1411,10 +1464,6 @@ const app = new Vue({
                                 }).catch(function (error) {
                                 self.show_loading = false;
                                 alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
-                                // console.error("Error response:");
-                                // console.error(error.response.data);
-                                // console.error(error.response.status);
-                                // console.error(error.response.headers);
                             });
                         }
                     }
@@ -1768,29 +1817,46 @@ const app = new Vue({
             self.$nextTick(function (){
                 $("#group_reference").selectpicker('val','').selectpicker('render');
             });
-            this.user_allowed_contracts.forEach((organization) => {
-                organization.contracts.forEach((contract) => {
-                    if (contract.id === parseInt(id)) {
-                        self.old_contract_id = parseInt(id);
-                        self.table_data_records = contract.employees;
-                        self.$forceUpdate();
+            self.show_loading = true;
+            axios.post(route("EmployeesManagement.get_employees"), {"reference_type":"contract","reference_id":id}).then(function (response) {
+                self.show_loading = false;
+                if (response.data){
+                    switch (response.data.result){
+                        case "success":{
+                            self.table_data_records = response.data.employees;
+                            break;
+                        }
+                        case "fail": {
+                            alertify.notify(response.data.message, 'error', "30");
+                            break;
+                        }
                     }
-                });
+                }
+            }).catch(function (error) {
+                self.show_loading = false;
+                alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
             });
         },
         RegistrationContextMenu(e,id){
             this.employee_id = parseInt(id);
             const self = this;
-            $("#Employees").selectpicker("destroy");
+            $(".employees_select").selectpicker("destroy");
             self.employees = [];
             self.employees.push(self.table_data_records.find(employee => { return employee.id === parseInt(id)}));
         },
         RegistrationContractSelected(id){
             const self = this;
-            const select = $("#Employees");
+            const select = $(".employees_select");
             self.employees = self.table_data_records.filter(employee => {return employee.contract_id === parseInt(id)});
             self.$nextTick(()=>{
-                self.employees.length > 0 ? select.selectpicker('destroy').selectpicker('refresh') : select.selectpicker('destroy');
+                if(self.employees.length > 1) {
+                    select.prop("hidden",false);
+                    select.selectpicker('destroy').selectpicker('refresh');
+                }
+                else {
+                    select.prop("hidden",true);
+                    select.selectpicker('destroy');
+                }
             });
         },
         EditMessage(e,id){
@@ -1872,6 +1938,6 @@ const app = new Vue({
                     alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
                 });
             }
-        }
+        },
     }
 });

@@ -197,7 +197,7 @@
         <p class="mitra" style="font-size: 12px">سلام علیکم</p>
         <p class="nazanin" style="text-align: justify;line-height: 25px;font-size: 15px">
             احتراماً بدینوسیله گواهی می گردد بر اساس قرارداد تامین نیروی
-            {{verta($application->automationable->data_array["active_contract_date"]["start"])->diffMonths(verta($application->automationable->data_array["active_contract_date"]["end"]))}}
+            {{verta($application->automationable->data_array["active_contract_date"]["start"])->diffMonths(verta($application->automationable->data_array["active_contract_date"]["end"])) + 1}}
             ماهه ،
             {{$application->employee->gender_refer}}
             <b>{{$application->employee->name}}</b>
@@ -258,7 +258,7 @@
                 </tr>
             </table>
         @endif
-        @if(isset($sign) && count($sign) > 0)
+        @if(isset($sign["sign"]))
             <div class="sign-container">
                 <div class="sign_box">
                     <p class="sign_role mitra">{{$sign["role"]}}</p>

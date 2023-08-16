@@ -25,7 +25,7 @@ class StaffUserController extends Controller
         try {
             $users = (User::UserType() == "staff" ? User::query()->with(["user","role"])->where("id","<>",Auth::id())->where("is_staff","=",1)->get() : User::UserType() == "admin") ? User::query()->where("is_super_user","=",0)->where("is_staff","=",1)->with(["user","role"])->get() : abort(403);
             $roles = Role::all();
-            return view("staff.users",["users" => $users,"roles" => $roles,"contracts" => $this->allowed_contracts("tree")]);
+            return view("staff.users",["users" => $users,"roles" => $roles,"organizations" => $this->allowed_contracts("tree")]);
         }
         catch (Throwable $error){
             return redirect()->back()->withErrors(["logical" => $error->getMessage()]);

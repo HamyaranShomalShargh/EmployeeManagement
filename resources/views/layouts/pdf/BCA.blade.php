@@ -111,7 +111,7 @@
     <div class="letter-body">
         <p class="mitra" style="font-size: 12px">سلام علیکم</p>
         <p class="nazanin" style="text-align: justify;line-height: 25px;font-size: 15px">
-            احتراماً بدينوسيله
+            احتراماً بدینوسیله
             {{$employee->gender_refer}}
             <b>{{$employee->name}}</b>
             فرزند
@@ -122,9 +122,9 @@
             <b>{{$employee->issue_city}}</b>
             و کد ملی
             <b>{{$employee->national_code}}</b>
-            که متقاضی کار در این شرکت می باشد، جهت صدور گواهی عدم سوء پيشينه به حضور معرفی می گردد. لطفا مراتب را پس از بررسی به این شركت به نشانی
+            که متقاضی کار در این شرکت می باشد، جهت صدور گواهی عدم سوء پیشینه به حضور معرفی می گردد. لطفا مراتب را پس از بررسی به این شركت به نشانی
             <b>{{$company_information->address}}</b>
-            ارسال نمائيد.
+            ارسال نمائید.
         </p>
     </div>
 @else
@@ -155,7 +155,7 @@
         <p class="titr" style="font-size: 18px;padding-bottom: 15px">{{"موضوع : ".$application->application_name}}</p>
         <p class="mitra" style="font-size: 12px">سلام علیکم</p>
         <p class="nazanin" style="text-align: justify;line-height: 25px;font-size: 15px">
-            احتراماً بدينوسيله
+            احتراماً بدینوسیله
             {{$application->employee->gender_refer}}
             <b>{{$application->employee->name}}</b>
             فرزند
@@ -166,11 +166,11 @@
             <b>{{$application->employee->issue_city}}</b>
             و کد ملی
             <b>{{$application->employee->national_code}}</b>
-            که متقاضی کار در این شرکت می باشد، جهت صدور گواهی عدم سوء پيشينه به حضور معرفی می گردد. لطفا مراتب را پس از بررسی به این شركت به نشانی
+            که متقاضی کار در این شرکت می باشد، جهت صدور گواهی عدم سوء پیشینه به حضور معرفی می گردد. لطفا مراتب را پس از بررسی به این شركت به نشانی
             <b>{{$company_information->address}}</b>
-            ارسال نمائيد.
+            ارسال نمائید.
         </p>
-        @if(isset($sign) && count($sign) > 0)
+        @if(isset($sign["sign"]))
             <div class="sign-container">
                 <div class="sign_box">
                     <p class="sign_role mitra">{{$sign["role"]}}</p>

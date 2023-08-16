@@ -6,7 +6,7 @@
             </h5>
         </div>
         <div class="modal-body">
-            <reference-box :refs_needed="kind === 'individual' ? [4] : [1,2,3]" @reference_selected="ReferenceSetup" @reference_check="ReferenceChecked"></reference-box>
+            <reference-box v-show="details === null" :refs_needed="kind === 'individual' ? [4] : [1,2,3]" @reference_selected="ReferenceSetup" @reference_check="ReferenceChecked"></reference-box>
             <div v-if="details === null" class="fieldset">
                 <span class="legend">
                     <label class="iransans">لیست درخواست ها</label>
@@ -30,7 +30,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr class="pointer-cursor hover-blue" v-for="(automation,index) in $root.$data?.employees?.automations" :class="automation?.automationable?.is_refused === 1 ? 'bg-refused' : automation?.automationable?.is_accepted === 1 ? 'bg-confirmed' : 'bg-progress'" :key="index" v-on:click="MoreDetails(automation.id)">
+                                <tr class="pointer-cursor hover-blue" v-for="(automation,index) in automations" :class="automation?.automationable?.is_refused === 1 ? 'bg-refused' : automation?.automationable?.is_accepted === 1 ? 'bg-confirmed' : 'bg-progress'" :key="index" v-on:click="MoreDetails(automation.id)">
                                     <td style="background: inherit">
                                         <span v-text="automation?.automationable?.i_number"></span>
                                     </td>
@@ -50,7 +50,7 @@
                                         <span class="iransans" v-text="automation.user.name"></span>
                                     </td>
                                 </tr>
-                                <tr v-if="$root.$data?.employees?.automations.length === 0">
+                                <tr v-if="automations.length === 0">
                                     <td colspan="6"><span class="iransans">رکوردی یافت نشد</span></td>
                                 </tr>
                                 </tbody>
@@ -72,10 +72,10 @@
                                                     <span class="iransans">در جریان</span>
                                                 </div>
                                             </div>
-                                            <span class="iransans ms-2" v-text="'جمع کل درخواست ها : ' + $root.$data?.employees?.automations.length"></span>
+                                            <span class="iransans ms-2" v-text="'جمع کل درخواست ها : ' + automations.length"></span>
                                             <span class="iransans me-2">
                                         جمع کل مبالغ وام :
-                                        <span v-text="GetTotalLoan(5)"></span>
+                                        <span v-text="TotalLoan"></span>
                                     </span>
                                         </div>
                                     </td>
@@ -86,7 +86,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else class="fieldset">
+            <div v-else class="fieldset mt-3">
                 <span class="legend">
                     <label class="iransans">{{ details?.application_name }}</label>
                 </span>
@@ -96,19 +96,19 @@
                             <label class="form-label iransans">
                                 نهاد درخواست کننده
                             </label>
-                            <input class="form-control text-center iransans" readonly name="recipient" type="text" :value="details !== null ? details?.automationable.recipient : null">
+                            <input class="form-control text-center iransans" readonly name="recipient" type="text" :value="details ? details?.automationable.recipient : null">
                         </div>
                         <div class="col-12 mb-3">
                             <label class="form-label iransans">
                                 نام وام گیرنده (جهت ضمانت)
                             </label>
-                            <input class="form-control text-center iransans" readonly name="borrower" type="text" :value="details !== null ? details?.automationable.borrower : null">
+                            <input class="form-control text-center iransans" readonly name="borrower" type="text" :value="details ? details?.automationable.borrower : null">
                         </div>
                         <div class="col-12 mb-3">
                             <label class="form-label iransans">
                                 مبلغ وام (ریال)
                             </label>
-                            <input readonly class="form-control text-center iransans" autocomplete="off" name="loan_amount" type="text" :value="details !== null ? GetSeperated(details?.automationable.loan_amount) : null">
+                            <input readonly class="form-control text-center iransans" autocomplete="off" name="loan_amount" type="text" :value="details ? GetSeperated(details?.automationable.loan_amount) : null">
                         </div>
                         <div class="col-12">
                             <h5 class="iransans mt-3">تایید کنندگان</h5>
@@ -121,7 +121,7 @@
                                     <span v-if="sign.refer === 1" class="text-muted" v-text="'ارجاع شده'"></span>
                                 </div>
                             </div>
-                            <span v-else class="iransans text-muted">شما اولین نفر در گردش اتوماسیون هستید</span>
+                            <span v-else class="iransans text-muted">تایید کننده ای وجود ندارد</span>
                         </div>
                         <div class="col-12 mb-3">
                             <h5 class="iransans mt-3">توضیحات ثبت شده</h5>
@@ -142,7 +142,8 @@
             </div>
         </div>
         <div class="modal-footer bg-menu">
-            <button v-if="details !== null" class="btn btn-outline-secondary iransans" v-on:click="details = null">
+            <button v-if="details !== null" class="btn btn-secondary iransans" v-on:click="details = null">
+                <i class="fa fa-arrow-alt-from-right fa-1-2x me-1"></i>
                 بازگشت به لیست
             </button>
             <button type="button" class="btn btn-outline-secondary iransans" data-bs-dismiss="modal" v-on:click="$root.$data.employee_operation_type=''">
@@ -156,6 +157,7 @@
 <script>
 import route from "ziggy-js";
 import numeral from "numeral";
+import alertify from "alertifyjs";
 
 export default {
     name: "EmployeeRequestHistoryModal",
@@ -164,20 +166,45 @@ export default {
         return {
             reference: null,
             data: null,
-            auth_type: "national_code",
-            password: null,
+            automations: [],
             details: null
         }
     },
+    computed: {
+        TotalLoan () {
+            return this.GetTotalLoan();
+        }
+    },
     mounted() {
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl,{"trigger" : "hover"}));
-        $(".request_history").fancyTable({
-            sortColumn:[0],
-            pagination: false,
-            perPage:0,
-            globalSearch:false,
-            searchable: false
+        const self = this;
+        axios.post(route("EmployeesManagement.requests_history"), {"employee_id": self.$data.data})
+            .then(function (response) {
+                if (response?.data) {
+                    switch (response.data.result) {
+                        case "success": {
+                            self.automations = response.data?.automations;
+                            alertify.notify("اطلاعات با موفقیت دریافت شد", 'success', "5");
+                            self.$nextTick(() => {
+                                const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+                                const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl,{"trigger" : "hover"}));
+                                $(".request_history").fancyTable({
+                                    sortColumn:[0],
+                                    pagination: false,
+                                    perPage:0,
+                                    globalSearch:false,
+                                    searchable: false
+                                });
+                            });
+                            break;
+                        }
+                        case "fail": {
+                            alertify.notify(response.data["message"], 'error', "30");
+                            break;
+                        }
+                    }
+                }
+            }).catch(function (error) {
+            alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
         });
     },
     methods:{
@@ -194,10 +221,9 @@ export default {
         GetSeperated(number){
             return `${numeral(number).format('0,0')} ریال`;
         },
-        GetTotalLoan(id){
-            const index = id;
+        GetTotalLoan(){
             const self = this;
-            const loans = self.$root.$data.employees?.automations.filter((loan_request) => {
+            const loans = self.automations.filter((loan_request) => {
                 return loan_request.automationable.is_accepted === 1 ? loan_request?.automationable.loan_amount > 0 : 0
             });
             let total = 0;
@@ -210,10 +236,9 @@ export default {
         },
         MoreDetails(id){
             const self = this;
-            this.details = self.$root.$data.employees?.automations.find(automation => {
+            this.details = self.automations.find(automation => {
                 return automation.id === parseInt(id);
             });
-            console.log(this.details);
         },
         SearchTable(e){
             let filter = e.target.value;
@@ -245,7 +270,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

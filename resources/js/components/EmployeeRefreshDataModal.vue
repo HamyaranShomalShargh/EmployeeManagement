@@ -349,8 +349,6 @@ export default {
                                     if (response?.data) {
                                         switch (response.data["result"]) {
                                             case "success": {
-                                                self.$root.$data.user_allowed_contracts = response.data?.contracts;
-                                                self.$root.$data.user_allowed_groups = response.data?.groups;
                                                 alertify.notify(response.data["message"], 'success', "5");
                                                 break;
                                             }

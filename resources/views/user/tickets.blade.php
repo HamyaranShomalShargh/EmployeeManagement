@@ -1,5 +1,4 @@
-
-@extends($user::UserType() == "user" ? "user.user_dashboard" : abort(403))
+@extends("user.user_dashboard")
 @section("variables")
     <script>
         const user_tickets_data = @json($tickets);

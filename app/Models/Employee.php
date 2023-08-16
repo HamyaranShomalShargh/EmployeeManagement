@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -157,6 +158,22 @@ class Employee extends Model
         $result["message"]["data"]["type"] = "refresh";
         $result["message"]["data"]["action"] = route("RefreshDataEmployees.index");
         return $result;
+    }
+    public static function find($keyword): \Illuminate\Database\Eloquent\Collection|array
+    {
+        $user_contracts = Contract::query()->where("user_id","=",Auth::id())->pluck("id");
+        $allowed_contracts = (User::UserType() == "staff" ? Organization::query()->where("inactive","=",0)->whereHas("contracts",function($query)use($user_contracts){
+            $query->where("contracts.inactive","=",0)->whereIn("contracts.id",$user_contracts);
+        })->whereHas("contracts.permitted_staffs",function($query){
+            $query->where("contract_user.staff_id","=",Auth::id());})->get() :
+            User::UserType() == "admin") ? Organization::query()->where("inactive","=",0)->whereHas("contracts",function($query){
+            $query->where("contracts.inactive","=",0);
+        })->get(): [];
+        return (User::UserType() == "staff" ? Employee::query()->with(["contract.organization","registrant_user","user"])
+            ->whereIn("contract_id",$allowed_contracts()->pluck("contracts.*.id")->flatten()->unique())
+            ->where("last_name","like",$keyword)->orWhere("national_code","like",$keyword)->get() : User::UserType() == "admin") ?
+            Employee::query()->with(["contract.organization","registrant_user","user"])
+                ->where("last_name","like",$keyword)->orWhere("national_code","like",$keyword)->get() : [];
     }
     public function getDocsAttribute(): array|string
     {

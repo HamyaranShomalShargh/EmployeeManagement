@@ -9,9 +9,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">ثبت نام پرسنل</h5>
-            <span>(تایید ، عدم تایید و حذف)</span>
+            <h4 class="iransans d-inline-block m-0 fw-bolder">
+                ثبت نام پرسنل
+                <span class="vertical-middle ms-1 text-muted">تایید ، عدم تایید ، حذف</span>
+            </h4>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -59,29 +60,29 @@
                     @endcan
                 </ul>
             </div>
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام پرسنل">
+            <input type="text" class="form-control text-center iransans" data-table="registration_table" placeholder="جستجو با نام، کدملی، سازمان، قرارداد و کد رهگیری" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table class="table table-hover pointer-cursor sortArrowWhite">
+                <table id="registration_table" class="table table-hover table-striped pointer-cursor sortArrowWhite" data-filter="[1,2,3,4,6]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col" style="max-width: 50px"><span>شماره</span></th>
+                        <th scope="col" style="width: 50px" data-sortas="numeric"><span>شماره</span></th>
                         <th scope="col"><span>نام</span></th>
-                        <th scope="col"><span>کد ملی</span></th>
+                        <th scope="col" style="width: 100px"><span>کد ملی</span></th>
                         <th scope="col"><span>سازمان</span></th>
                         <th scope="col"><span>قرارداد</span></th>
-                        <th scope="col"><span>تلفن همراه</span></th>
-                        <th scope="col"><span>کد رهگیری</span></th>
-                        <th scope="col"><span>تاریخ ثبت نام</span></th>
-                        <th scope="col"><span>بارگذاری مجدد</span></th>
+                        <th scope="col" style="width: 110px;"><span>تلفن همراه</span></th>
+                        <th scope="col" style="width: 140px"><span>کد رهگیری</span></th>
+                        <th scope="col" style="width: 100px"><span>تاریخ ثبت نام</span></th>
+                        <th scope="col" style="width: 80px"><span>بارگذاری مجدد</span></th>
                     </tr>
                     </thead>
                     <tbody>
                     @forelse($employees as $employee)
                         <tr @if($employee->reload_data && $employee->reload_data->is_loaded == 1) class="edited" data-bs-toggle="tooltip" title="اطلاعات درخواست شده مجدداً بارگذاری شد" @elseif($employee->reload_data && $employee->reload_data->is_loaded == 0) data-bs-toggle="tooltip" title="دارای درخواست بارگذاری مجدد اطلاعات" class="editing" @endif @contextmenu.prevent="$refs.contextMenu.open" v-on:contextmenu="RegistrationContextMenu($event,{{$employee->id}})">
-                            <td><span class="iransans">{{ $employee->id }}</span></td>
+                            <td class="iransans">{{ $employee->id }}</td>
                             <td><span class="iransans">{{ $employee->name }}</span></td>
                             <td><span class="iransans">{{ $employee->national_code }}</span></td>
                             <td><span class="iransans">{{ $employee->contract->organization->name }}</span></td>
@@ -91,14 +92,7 @@
                             <td><span class="iransans">{{ verta($employee->registration_date)->format("Y/m/d") }}</span></td>
                             <td>
                                 @if($employee->reload_data && $employee->reload_data->is_loaded)
-                                    @forelse($employee->reload_data->docs as $doc)
-                                        <h6 class="iransans border">{{$doc["name"]}}</h6>
-                                    @empty
-                                    @endforelse
-                                    @forelse($employee->reload_data->databases as $database)
-                                        <h6 class="iransans border">{{$database["name"]}}</h6>
-                                    @empty
-                                    @endforelse
+                                    <i class="fa fa-check-circle fa-1-4x green-color"></i>
                                 @elseif($employee->reload_data && $employee->reload_data->is_loaded == 0)
                                     <i class="fa fa-times-circle fa-1-4x red-color"></i>
                                 @else
@@ -108,10 +102,22 @@
                         </tr>
                     @empty
                         <tr>
-                            <td class="iransans" colspan="11">اطلاعاتی وجود ندارد</td>
+                            <td class="iransans" colspan="9">اطلاعاتی وجود ندارد</td>
                         </tr>
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    {{ count($employees) }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -144,7 +150,6 @@
                         <i class="fa fa-refresh fa-1-2x me-2"></i>
                         <span class="iransans">بارگذاری مجدد اطلاعات</span>
                     </button>
-
                 </li>
             @endcan
         </vue-context>
@@ -403,7 +408,7 @@
                                 <span class="form-control iransans border rounded-2">
                                     @{{ `${employees[0].name} (${employees[0].national_code})` }}
                                 </span>
-                                <select hidden="hidden" name="employees[]">
+                                <select hidden name="employees[]">
                                     <option :value="employees[0].id"></option>
                                 </select>
                             </div>
@@ -411,7 +416,7 @@
                                 <label class="form-label iransans mb-2">قرارداد</label>
                                 <tree-select :branch_node="true" :clearable="false" @contract_selected="RegistrationContractSelected" dir="rtl" :is_multiple="false" :placeholder="'انتخاب کنید'" :database="organizations"></tree-select>
                                 <label class="form-label iransans mb-2 mt-3">پرسنل</label>
-                                <select hidden id="Employees" class="form-control iransans" multiple data-size="15" data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true" name="employees[]">
+                                <select hidden id="ConfirmEmployees" class="form-control iransans employees_select" multiple data-size="15" data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true" name="employees[]">
                                     <option v-for="employee in employees" :key="employee.id" :value="employee.id">@{{ `${employee.name}(${employee.national_code})` }}</option>
                                 </select>
                                 <div v-if="employees.length === 0" class="alert alert-danger iransans text-center" role="alert">
@@ -496,7 +501,7 @@
                                 <label class="form-label iransans mb-2">قرارداد</label>
                                 <tree-select :branch_node="true" :clearable="false" @contract_selected="RegistrationContractSelected" dir="rtl" :is_multiple="false" :placeholder="'انتخاب کنید'" :database="organizations"></tree-select>
                                 <label class="form-label iransans mb-2 mt-3">پرسنل</label>
-                                <select hidden id="Employees" class="form-control iransans" multiple data-size="15" data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true" name="employees[]">
+                                <select hidden id="ReloadEmployees" class="form-control iransans employees_select" multiple data-size="15" data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true" name="employees[]">
                                     <option v-for="employee in employees" :key="employee.id" :value="employee.id">@{{ `${employee.name}(${employee.national_code})` }}</option>
                                 </select>
                                 <div v-if="employees.length === 0" class="alert alert-danger iransans text-center" role="alert">
@@ -505,7 +510,7 @@
                             </div>
                             <div class="form-group col-12 mb-3">
                                 <label class="form-label iransans mb-2">انتخاب اطلاعات</label>
-                                <select class="form-control text-center iransans selectpicker-select mb-3 @error('db_titles') is-invalid @enderror" multiple data-actions-box="true" tabindex="-1" title="انتخاب کنید" data-container="body" data-size="10" data-live-search="true" name="db_titles[]">
+                                <select class="form-control text-center iransans selectpicker-select @error('db_titles') is-invalid is-invalid-fake @enderror" data-selected-text-format="count > 3" multiple data-actions-box="true" tabindex="-1" title="انتخاب کنید" data-container="body" data-size="10" data-live-search="true" name="db_titles[]">
                                     <option value="first_name">نام</option>
                                     <option value="last_name">نام خانوادگی</option>
                                     <option value="father_name">نام پدر</option>
@@ -533,10 +538,13 @@
                                     <option value="insurance_number">شماره بیمه</option>
                                     <option value="insurance_days">سابقه بیمه</option>
                                 </select>
+                                @error('db_titles')
+                                <span class="invalid-feedback iransans small_font" role="alert">{{ $message }}</span>
+                                @enderror
                             </div>
                             <div class="form-group col-12 mb-3">
                                 <label class="form-label iransans mb-2">انتخاب مدارک</label>
-                                <select class="form-control text-center iransans selectpicker-select mb-3 @error('doc_titles') is-invalid @enderror" multiple data-actions-box="true" tabindex="-1" title="انتخاب کنید" data-container="body" data-size="10" data-live-search="true" name="doc_titles[]">
+                                <select class="form-control text-center iransans selectpicker-select @error('doc_titles') is-invalid is-invalid-fake @enderror" data-selected-text-format="count > 3" multiple data-actions-box="true" tabindex="-1" title="انتخاب کنید" data-container="body" data-size="10" data-live-search="true" name="doc_titles[]">
                                     <option value="birth_certificate">تصویر صفحات شناسنامه</option>
                                     <option value="national_card">تصویر کارت ملی</option>
                                     <option value="military_certificate">تصویر کارت پایان خدمت</option>
@@ -544,13 +552,16 @@
                                     <option value="personal_photo">تصویر عکس پرسنلی</option>
                                     <option value="insurance_confirmation">تصویر تاییدیه بیمه</option>
                                 </select>
+                                @error('doc_titles')
+                                <span class="invalid-feedback iransans small_font" role="alert">{{ $message }}</span>
+                                @enderror
                             </div>
                             <div class="form-group col-12 mb-3">
-                                <input :disabled="employees.length === 0" type="checkbox" name="send_sms_permission" v-model="sms_send_permission" value="true" class="form-check d-inline-block vertical-middle" tabindex="-1" v-on:change="refresh_selects">
+                                <input :disabled="employees.length === 0" type="checkbox" name="send_sms_permission" v-model="sms_send_permission" value="true" class="form-check d-inline-block vertical-middle" tabindex="-1">
                                 <label class="form-label iransans mb-2" for="sms_send_permission">
                                     ارسال پیامک
                                 </label>
-                                <select :disabled="!sms_send_permission" class="form-control text-center iransans selectpicker-select mb-3 @error('sms_phrase_id') is-invalid @enderror" v-model="select_model" tabindex="-1" title="انتخاب کنید" data-container="body" data-size="10" data-live-search="true" data-place="reload_sms_text" name="sms_phrase_id" v-on:change="place_sms_text">
+                                <select :disabled="!sms_send_permission" class="form-control text-center iransans selectpicker-select mb-3" v-model="select_model" tabindex="-1" title="انتخاب کنید" data-container="body" data-size="10" data-live-search="true" data-place="reload_sms_text" name="sms_phrase_id" v-on:change="place_sms_text">
                                     @forelse($sms_phrase_categories as $category)
                                         <optgroup style="font-size: 18px" label="{{ $category->name }}">
                                             @forelse($category->phrases as $phrase)
@@ -562,7 +573,12 @@
                                     @empty
                                     @endforelse
                                 </select>
-                                <textarea :disabled="!sms_send_permission || employees.length === 0" name="sms_text" id="reload_sms_text" class="form-control iransans" tabindex="-1"></textarea>
+                                <textarea :disabled="!sms_send_permission || employees.length === 0" name="sms_text" id="reload_sms_text" class="form-control iransans @error('sms_text') is-invalid is-invalid-fake @enderror" tabindex="-1">
+                                    {{old('sms_text')}}
+                                </textarea>
+                                @error('sms_text')
+                                <span class="invalid-feedback iransans small_font" role="alert">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
                     </form>
@@ -615,7 +631,7 @@
                                 <label class="form-label iransans mb-2">قرارداد</label>
                                 <tree-select :branch_node="true" :clearable="false" @contract_selected="RegistrationContractSelected" dir="rtl" :is_multiple="false" :placeholder="'انتخاب کنید'" :database="organizations"></tree-select>
                                 <label class="form-label iransans mb-2 mt-3">پرسنل</label>
-                                <select hidden id="Employees" class="form-control iransans" multiple data-size="15" data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true" name="employees[]">
+                                <select hidden id="RefuseEmployees" class="form-control iransans employees_select" multiple data-size="15" data-live-search="true" data-selected-text-format="count > 3" data-actions-box="true" name="employees[]">
                                     <option v-for="employee in employees" :key="employee.id" :value="employee.id">@{{ `${employee.name}(${employee.national_code})` }}</option>
                                 </select>
                                 <div v-if="employees.length === 0" class="alert alert-danger iransans text-center" role="alert">

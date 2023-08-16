@@ -2,7 +2,6 @@
 @section('variables')
     <script>
         const allowed_organizations = @json($organizations);
-        const allowed_contracts = @json($contracts);
         const allowed_groups = @json($custom_groups);
         const sms_bank = @json($sms_phrase_categories);
         const applications_data = @json($applications);
@@ -11,9 +10,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">مدیریت پرسنل</h5>
-            <span>(ایجاد،مشاهده،ویرایش،حذف)</span>
+            <h4 class="iransans d-inline-block m-0 fw-bolder">
+                مدیریت پرسنل
+                <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
+            </h4>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -35,9 +35,10 @@
             <div class="offcanvas-body">
                 <div class="fieldset">
                     <span class="legend iransans">جستجوی کلی</span>
-                    <div class="fieldset-body">
-                        <select list="employee_search_list" class="form-control text-center iransans selectpicker-select" data-size="15" data-live-search="tru" title="نام و نام خانوادگی و کد ملی ..." v-on:change="AdvancedEmployeeSearch">
-                            <option v-for="employee in AllEmployees" :key="employee.id" :value="employee.id">@{{ employee.name + " - " + employee.national_code }}</option>
+                    <div class="fieldset-body find-employees">
+                        <select class="form-control text-center iransans selectpicker-select find-employees-select" data-size="15" data-live-search="true" title="نام و نام خانوادگی و کد ملی ..." v-on:change="AdvancedEmployeeSearch">
+                            <option v-if="EmployeesFound.length > 0" v-for="employee in EmployeesFound" :key="employee.id" :value="employee.id">@{{ employee.name + " - " + employee.national_code }}</option>
+                            <option v-if="RegistrationFound.length > 0" v-for="employee in RegistrationFound" :key="employee.id">@{{ employee.name + " - " + employee.national_code }}</option>
                         </select>
                     </div>
 
@@ -46,84 +47,84 @@
                     <span class="legend iransans">عملیات جمعی</span>
                     <div class="fieldset-body">
                         <div class="d-flex flex-row align-items-start justify-content-start flex-wrap gap-2">
-                            @can('addEmployee',"EmployeeManagement")
+                            @can('add_new_item',"EmployeeManagement")
                                 <div data-bs-toggle="tooltip" title="ایجاد پرسنل">
                                     <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'add_employee';employee_operation_kind = 'groups'">
                                         <i class="fad fa-user-plus fa-2x"></i>
                                     </button>
                                 </div>
                             @endcan
-                            @can('deleteEmployee',"EmployeeManagement")
+                            @can('delete_item',"EmployeeManagement")
                                 <div data-bs-toggle="tooltip" title="حذف پرسنل">
                                     <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'remove_employee';employee_operation_kind = 'groups'">
                                          <i class="fad fa-user-minus fa-2x"></i>
                                     </button>
                                 </div>
                             @endcan
-                            @can('accountEmployee',"EmployeeManagement")
+                            @can('item_status',"EmployeeManagement")
                                 <div data-bs-toggle="tooltip" title="مسدود سازی/رفع مسدودی حساب  کاربری پرسنل">
                                     <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_status';employee_operation_kind = 'groups'">
                                         <i class="fad fa-user-shield fa-2x"></i>
                                     </button>
                                 </div>
                             @endcan
-                            @can('authEmployee',"EmployeeManagement")
+                            @can('item_auth',"EmployeeManagement")
                                  <div data-bs-toggle="tooltip" title="تغییر و بازنشانی نام کاربری و گذرواژه پرسنل">
                                      <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_auth';employee_operation_kind = 'groups'">
                                          <i class="fad fa-user-lock fa-2x"></i>
                                      </button>
                                  </div>
                             @endcan
-                            @can('reloadDataEmployee',"EmployeeManagement")
+                            @can('item_data_refresh',"EmployeeManagement")
                             <div data-bs-toggle="tooltip" title="درخواست بازنشانی اطلاعات و یا مدارک پرسنل">
                                 <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_refresh_data';employee_operation_kind = 'groups'; modal_size='modal-lg'">
                                     <i class="fad fa-user-gear fa-2x"></i>
                                 </button>
                             </div>
                             @endcan
-                            @can('dateExtensionEmployee',"EmployeeManagement")
+                            @can('item_date_extension',"EmployeeManagement")
                                  <div data-bs-toggle="tooltip" title="تمدید تاریخ قرارداد پرسنل">
                                      <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_date_extension';employee_operation_kind = 'groups'; modal_size='modal-lg'">
                                          <i class="fad fa-user-clock fa-2x"></i>
                                      </button>
                                  </div>
                             @endcan
-                            @can('contractConversionEmployee',"EmployeeManagement")
+                            @can('item_contract_conversion',"EmployeeManagement")
                                  <div data-bs-toggle="tooltip" title="انتقال قرارداد پرسنل">
                                      <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_contract_conversion';employee_operation_kind = 'groups'; modal_size='modal-lg'">
                                          <i class="fad fa-user-tag fa-2x"></i>
                                      </button>
                                  </div>
                             @endcan
-                            @can('deletedEmployee',"EmployeeManagement")
+                            @can('get_deleted_employees',"EmployeeManagement")
                                  <div data-bs-toggle="tooltip" title="پرسنل حذف شده">
                                      <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_deleted';employee_operation_kind = 'groups'; modal_size='modal-xl'">
                                          <i class="fad fa-users-slash fa-2x"></i>
                                      </button>
                                  </div>
                             @endcan
-                            @can('excelListEmployee',"EmployeeManagement")
+                            @can('item_excel_list',"EmployeeManagement")
                                  <div data-bs-toggle="tooltip" title="لیست اکسل پرسنل">
                                      <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_excel_list';employee_operation_kind = 'groups'; modal_size='modal-lg'">
                                          <i class="fad fa-file-spreadsheet fa-2x"></i>
                                      </button>
                                  </div>
                             @endcan
-                            @can('ticketEmployee',"EmployeeManagement")
+                            @can('send_ticket',"EmployeeManagement")
                                  <div data-bs-toggle="tooltip" title="ارسال تیکت به پرسنل">
                                      <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_send_ticket';employee_operation_kind = 'groups'; modal_size='modal-lg'">
                                          <i class="fad fa-messages fa-2x"></i>
                                      </button>
                                  </div>
                             @endcan
-                            @can('smsEmployee',"EmployeeManagement")
+                            @can('send_sms',"EmployeeManagement")
                                  <div data-bs-toggle="tooltip" title="ارسال پیامک به پرسنل">
                                      <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_send_sms';employee_operation_kind = 'groups'; modal_size='modal-lg'">
                                          <i class="fad fa-message-sms fa-2x"></i>
                                      </button>
                                  </div>
                             @endcan
-                            @can('requestEmployee',"EmployeeManagement")
+                            @can('item_batch_application',"EmployeeManagement")
                                  <div data-bs-toggle="tooltip" title="ایجاد درخواست جدید">
                                      <button class="employee-action-button btn btn-outline-dark" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="employee_operation_type = 'employee_create_application';employee_operation_kind = 'groups'; modal_size='modal-lg'">
                                          <i class="fad fa-memo-circle-check fa-2x"></i>
@@ -146,14 +147,14 @@
             <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#reference_selection_modal" aria-controls="reference_selection_modal">
                 <i class="far fa-users fa-1-4x ps-2 pe-2"></i>
             </button>
-            <input type="text" autocomplete="off" class="form-control text-center iransans" placeholder="جستجو با نام، نام خانوادگی و یا کد ملی" data-table="search_table" v-on:input="filter_table">
+            <input type="text" autocomplete="off" class="form-control text-center iransans" placeholder="جستجو با نام، نام خانوادگی ، کد ملی ، شماره شناسنامه و سازمان" data-table="employees_table" v-on:input="filter_table">
             <button class="btn btn-success" type="button" data-bs-toggle="offcanvas" data-bs-target="#employee_management_menu" aria-controls="employee_management_menu">
                 <i class="far fa-gear fa-1-4x ps-2 pe-2"></i>
             </button>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table id="search_table" class="table table-hover no-sort" data-filter="[3,4,5]">
+                <table id="employees_table" class="table table-hover no-sort table-striped" data-filter="[1,2,3,4,5]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
                         <th scope="col" style="width: 70px"><span>شماره</span></th>
@@ -161,10 +162,8 @@
                         <th scope="col" style="width: 140px"><span>نام خانوادگی</span></th>
                         <th scope="col" style="width: 100px"><span>کد ملی</span></th>
                         <th scope="col" style="width: 100px"><span>شماره شناسنامه</span></th>
-                        <th scope="col"><span>سازمان</span></th>
-                        <th scope="col"><span>قرارداد</span></th>
+                        <th scope="col" style="width: 300px"><span>سازمان</span></th>
                         <th scope="col" style="width: 180px"><span>محل استقرار</span></th>
-                        <th scope="col"  style="width: 150px"><span>عنوان شغل</span></th>
                         <th scope="col" style="width: 100px"><span>تلفن همراه</span></th>
                         <th scope="col" style="width: 50px"><span>حساب کاربری</span></th>
                         <th scope="col" style="width: 90px"><span>توسط</span></th>
@@ -183,9 +182,7 @@
                         <td><span class="pointer-cursor" v-text="employee.national_code"></span></td>
                         <td><span class="pointer-cursor" v-text="employee.id_number"></span></td>
                         <td><span class="pointer-cursor" v-text="employee.contract.organization.name"></span></td>
-                        <td><span class="pointer-cursor" v-text="employee.contract.name"></span></td>
                         <td><span class="pointer-cursor" v-text="employee.job_seating"></span></td>
-                        <td><span class="pointer-cursor" v-text="employee.job_title"></span></td>
                         <td><span class="pointer-cursor" v-text="employee.mobile"></span></td>
                         <td>
                             <span class="pointer-cursor">
@@ -204,28 +201,36 @@
                         </td>
                     </tr>
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    @{{ table_data_records.length }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
     </div>
     <vue-context ref="contextMenu">
-        @can('viewDocEmployee',"EmployeeManagement")
-            <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
-                <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-toggle="modal" data-bs-target="#docs_modal" v-on:click="view_employee_information">
-                    <i class="fa fa-images-user fa-1-4x me-2"></i>
-                    <span class="iransans">مشاهده مدارک</span>
-                </button>
-            </li>
-        @endcan
-        @can('viewDataEmployee',"EmployeeManagement")
-            <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
-                <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-toggle="modal" data-bs-target="#db_information_modal" v-on:click="individual_operation">
-                    <i class="fa fa-database fa-1-4x me-2"></i>
-                    <span class="iransans">مشاهده اطلاعات</span>
-                </button>
-            </li>
-        @endcan
-        @can('accountEmployee',"EmployeeManagement")
+        <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
+            <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-toggle="modal" data-bs-target="#docs_modal" v-on:click="view_employee_information">
+                <i class="fa fa-images-user fa-1-4x me-2"></i>
+                <span class="iransans">مشاهده مدارک</span>
+            </button>
+        </li>
+        <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
+            <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-toggle="modal" data-bs-target="#db_information_modal" v-on:click="individual_operation">
+                <i class="fa fa-database fa-1-4x me-2"></i>
+                <span class="iransans">مشاهده اطلاعات</span>
+            </button>
+        </li>
+        @can('item_status',"EmployeeManagement")
             <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                 <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_status')">
                     <i class="fa fa-user-shield fa-1-4x me-2"></i>
@@ -233,7 +238,7 @@
                 </button>
             </li>
         @endcan
-        @can('authEmployee',"EmployeeManagement")
+        @can('item_auth',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_auth')">
                      <i class="fa fa-user-lock fa-1-4x me-2"></i>
@@ -241,7 +246,7 @@
                  </button>
              </li>
         @endcan
-        @can('reloadDataEmployee',"EmployeeManagement")
+        @can('item_data_refresh',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_refresh_data')">
                      <i class="fa fa-user-gear fa-1-4x me-2"></i>
@@ -249,7 +254,7 @@
                  </button>
              </li>
         @endcan
-        @can('dateExtensionEmployee',"EmployeeManagement")
+        @can('item_date_extension',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_date_extension')">
                      <i class="fa fa-user-clock fa-1-4x me-2"></i>
@@ -257,7 +262,7 @@
                  </button>
              </li>
         @endcan
-        @can('contractConversionEmployee',"EmployeeManagement")
+        @can('item_contract_conversion',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_contract_conversion')">
                      <i class="fa fa-user-tag fa-1-4x me-2"></i>
@@ -265,7 +270,7 @@
                  </button>
              </li>
         @endcan
-        @can('requestHistoryEmployee',"EmployeeManagement")
+        @can('requests_history',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_request_history_view')">
                      <i class="fa fa-file-search fa-1-4x me-2"></i>
@@ -273,7 +278,7 @@
                  </button>
              </li>
         @endcan
-        @can('requestEmployee',"EmployeeManagement")
+        @can('item_batch_application',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_create_application')">
                      <i class="fa fa-memo-circle-check fa-1-4x me-2"></i>
@@ -281,7 +286,7 @@
                  </button>
              </li>
         @endcan
-        @can('ticketEmployee',"EmployeeManagement")
+        @can('send_ticket',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_send_ticket')">
                      <i class="fa fa-messages fa-1-4x me-2"></i>
@@ -289,7 +294,7 @@
                  </button>
              </li>
         @endcan
-        @can('ticketHistoryEmployee',"EmployeeManagement")
+        @can('get_tickets',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_ticket_history')">
                      <i class="fa fa-message-check fa-1-4x me-2"></i>
@@ -297,7 +302,7 @@
                  </button>
              </li>
         @endcan
-        @can('smsEmployee',"EmployeeManagement")
+        @can('send_sms',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_send_sms')">
                      <i class="fa fa-message-sms fa-1-4x me-2"></i>
@@ -305,7 +310,7 @@
                  </button>
              </li>
         @endcan
-        @can('historyEmployee',"EmployeeManagement")
+        @can('history',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'employee_history_view')">
                      <i class="fa fa-folder-search fa-1-4x me-2"></i>
@@ -321,7 +326,7 @@
                  </button>
              </li>
         @endcan
-        @can('deleteEmployee',"EmployeeManagement")
+        @can('delete_item',"EmployeeManagement")
              <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
                  <button class="w-100 dropdown-item d-flex align-items-center justify-content-start" data-bs-target="#employee_operations_modal" data-bs-toggle="modal" @click="individual_operation($event,'remove_employee')">
                      <i class="fa fa-trash-can fa-1-4x me-2"></i>
@@ -534,10 +539,12 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-menu">
-                    <live-transfer :target="'employees'" :class="'btn btn btn-success'" route="{{ route("EditEmployeeDatabaseInformation") }}" :message="'آیا برای ویرایش اطلاعات اطمینان دارید؟'">
-                        <i class="fa fa-edit fa-1-2x me-1"></i>
-                        <span class="iransans">ویرایش اطلاعات</span>
-                    </live-transfer>
+                    @can("edit_item","EmployeesManagement")
+                        <live-transfer :target="'employees'" :class="'btn btn btn-success'" route="{{ route("EmployeesManagement.edit_item") }}" :message="'آیا برای ویرایش اطلاعات اطمینان دارید؟'">
+                            <i class="fa fa-edit fa-1-2x me-1"></i>
+                            <span class="iransans">ویرایش اطلاعات</span>
+                        </live-transfer>
+                    @endcan
                     <button type="button" class="btn btn-outline-secondary iransans" data-bs-dismiss="modal">
                         <i class="fa fa-times fa-1-2x me-1"></i>
                         <span class="iransans">بستن</span>
@@ -566,8 +573,8 @@
                             <div>
                                 <label class="iransans mb-1">گروه سفارشی</label>
                             </div>
-                            <select class="form-control iransans selectpicker-select mb-2" title="انتخاب کنید" id="group_reference" data-size="30" data-live-search="true" v-model="groups" v-on:change="GetGroupEmployees">
-                                <option v-for="(group,index) in user_allowed_groups" :value="index">@{{ group.name }}</option>
+                            <select class="form-control iransans selectpicker-select mb-2" title="انتخاب کنید" id="group_reference" data-size="15" data-live-search="true" v-model="groups" v-on:change="GetGroupEmployees">
+                                <option v-for="group in user_allowed_groups" :value="group.id">@{{ group.name }}</option>
                             </select>
                         </div>
                     </div>

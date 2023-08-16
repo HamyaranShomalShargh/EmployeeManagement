@@ -15,7 +15,7 @@
                     </label>
                 </span>
                 <div class="fieldset-body">
-                    <tree-select @contract_selected="ContractSelected" dir="rtl" :is_multiple="false" :placeholder="'انتخاب کنید'" :database="$root.organizations"></tree-select>
+                    <tree-select :branch_node="true" @contract_selected="ContractSelected" dir="rtl" :is_multiple="false" :placeholder="'انتخاب کنید'" :database="$root.organizations"></tree-select>
                 </div>
             </div>
             <div class="fieldset">
@@ -326,9 +326,7 @@ export default {
                                     if (response?.data) {
                                         switch (response.data["result"]) {
                                             case "success": {
-                                                self.$root.$data.user_allowed_contracts = response.data?.contracts;
-                                                self.$root.$data.user_allowed_groups = response.data?.groups;
-                                                self.$emit("update_table");
+                                                self.$root.$data.table_data_records = [];
                                                 self.$root.refresh_selects();
                                                 alertify.notify(response.data["message"], 'success', "5");
                                                 break;

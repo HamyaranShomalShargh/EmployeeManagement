@@ -1,10 +1,10 @@
-
+@extends("staff.staff_dashboard")
 @section('variables')
     <script>
         const allowed_organizations = @json($organizations);
         const advantage_columns_data = @json(json_decode($financial_info->advantages),true);
     </script>
-@endsection@extends("staff.staff_dashboard")
+@endsection
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
@@ -24,33 +24,36 @@
             @method('PUT')
             <div class="row">
                 <div class="col-12 mb-3">
-                    <span class="iransans fw-bold">{{"اطلاعات مالی ".$financial_info->employee->name." ".$financial_info->employee->national_code}}</span>
+                    <div class="alert alert-secondary iransans" role="alert">
+                        <span class="iransans fw-bold">{{"اطلاعات مالی "."{$financial_info->employee->name} {$financial_info->employee->national_code} (سال موثر =  {$financial_info->effective_year})"}}</span>
+                    </div>
                 </div>
-                <div class="col-12 col-lg-6 mb-2">
+                <div class="col-12 mb-2">
                     <label class="form-label iransans">دستمزد روزانه</label>
                     <input class="form-control text-center iransans thousand_separator" type="text" value="{{$financial_info->daily_wage}}" id="daily_wage" name="daily_wage">
                 </div>
-                <div class="col-12 col-lg-6 mb-2">
+                <div class="col-12 mb-2">
                     <label class="form-label iransans">پایه سنوات</label>
                     <input class="form-control text-center iransans thousand_separator" type="text" value="{{$financial_info->prior_service}}" id="prior_service" name="prior_service">
                 </div>
-                <div class="col-12 col-lg-6 mb-2">
+                <div class="col-12 mb-2">
                     <label class="form-label iransans">روزهای کارکرد</label>
                     <input class="form-control text-center iransans" type="number" max="31" min="1" value="{{$financial_info->working_days}}" id="working_days" name="working_days" v-on:input="parseInt($event.target.value) > 31 ? $event.target.value = 31 : ''">
                 </div>
-                <div class="col-12 col-lg-6 mb-2">
+                <div class="col-12 mb-2">
                     <label class="form-label iransans">گروه شغلی</label>
                     <input class="form-control text-center iransans" type="number" max="20" min="1" value="{{$financial_info->occupational_group}}" id="occupational_group" name="occupational_group" v-on:input="parseInt($event.target.value) > 20 ? $event.target.value = 20 : ''">
                 </div>
-                <div class="col-12 col-lg-6 mb-2">
+                <div class="col-12 mb-2">
                     <label class="form-label iransans">فرزندان تحت تکفل</label>
                     <input class="form-control text-center iransans" type="number" max="20" min="0" value="{{$financial_info->count_of_children}}" id="count_of_children" name="count_of_children" v-on:input="parseInt($event.target.value) > 20 ? $event.target.value = 20 : ''">
                 </div>
-                <div class="col-12 col-lg-6 mb-2">
+                <div class="col-12 mb-2">
                     <label class="form-label iransans mb-1">سال مؤثر</label>
                     <select class="form-control iransans selectpicker-select" name="effective_year">
-                        <option value="{{ verta()->subYear()->format("Y") }}">{{ verta()->subYear()->format("Y") }}</option>
-                        <option selected value="{{ verta()->format("Y") }}">{{ verta()->format("Y") }}</option>
+                        @for($i = 5; $i >= 0; $i--)
+                            <option @if(verta()->format("Y") == $financial_info->effective_year) selected @endif value="{{ verta()->subYears($i)->format("Y") }}">{{ verta()->subYears($i)->format("Y") }}</option>
+                        @endfor
                     </select>
                 </div>
                 <div class="col-12 mb-2">

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\HeadingRowImport;
@@ -24,21 +25,50 @@ class EmployeeFinancialAdvantagesController extends Controller
     {
         Gate::authorize('index',"PersonnelAppointmentForms");
         try {
-            $employees = [];
-            if ($request->has("contract_id") && $request->has("effective_year")){
-                $employees = EmployeeFinancialAdvantage::BatchAdvantages($request->input("contract_id"),$request->input("effective_year"));
-            }
             return view("staff.employee_financial_advantages", [
                 "organizations" => $this->allowed_contracts("tree"),
-                "contracts" => $this->allowed_contracts(),
-                "employees" => $employees
+                "employees" => Session::has("employees") ? Session::get("employees") : [],
+                "query" => Session::has("query") ? Session::get("query") : false,
             ]);
         }
         catch (Throwable $error){
             return redirect()->back()->withErrors(["logical" => $error->getMessage()]);
         }
     }
-
+    public function query(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        try {
+            $request->validate([
+                "contract_id" => "required","effective_year" => "required"],
+                [
+                    "contract_id.required" => "انتخاب قرارداد الزامی می باشد",
+                    "effective_year.required" => "انتخاب سال الزامی می باشد",
+                ]
+            );
+            $employees = EmployeeFinancialAdvantage::BatchAdvantages($request->input("contract_id"),$request->input("effective_year"));
+            return redirect()->route("EmployeeFinancialAdvantages.index")->with(["employees" => $employees,"query" => true]);
+        }
+        catch (Throwable $error){
+            return redirect()->back()->withErrors(["logical" => $error->getMessage()]);
+        }
+    }
+    public function get_employees(Request $request): array
+    {
+        try {
+            $request->validate(["contract_id" => "required"],["contract_id.required" => "انتخاب قرارداد الزامی می باشد"]);
+            $contract_id = $request->input("contract_id");
+            return [
+                "result" => "success",
+                "employees" => Employee::query()->where("contract_id","=",$contract_id)->get()
+            ];
+        }
+        catch (Throwable $error){
+            return [
+                "result" => "fail",
+                "message" => $error->getMessage()
+            ];
+        }
+    }
     public function store(EmployeeFinancialAdvantageRequest $request): \Illuminate\Http\RedirectResponse
     {
         Gate::authorize('create',"PersonnelAppointmentForms");
@@ -133,7 +163,7 @@ class EmployeeFinancialAdvantagesController extends Controller
 
     public function update(EmployeeFinancialAdvantageRequest $request, $id): \Illuminate\Http\RedirectResponse
     {
-        Gate::authorize('create',"PersonnelAppointmentForms");
+        Gate::authorize('edit',"PersonnelAppointmentForms");
         try {
             DB::beginTransaction();
             $validated = $request->validated();
@@ -163,6 +193,7 @@ class EmployeeFinancialAdvantagesController extends Controller
 
     public function destroy($id): \Illuminate\Http\RedirectResponse
     {
+        Gate::authorize('delete',"PersonnelAppointmentForms");
         try {
             DB::beginTransaction();
             EmployeeFinancialAdvantage::query()->findOrFail($id)->delete();
@@ -177,6 +208,7 @@ class EmployeeFinancialAdvantagesController extends Controller
 
     public function destroyAll(Request $request): \Illuminate\Http\RedirectResponse
     {
+        Gate::authorize('delete',"PersonnelAppointmentForms");
         try {
             DB::beginTransaction();
             $contract_id = $request->input("contract_id");
@@ -223,11 +255,11 @@ class EmployeeFinancialAdvantagesController extends Controller
             }
             if (count($import->getResult()) === 0) {
                 $flag = "fail";
-                $message = "عملیات ناموفق! لطفا به قسمت خطای بارگذاری مرجعه نمایید";
+                $message = "عملیات ناموفق! لطفا به قسمت خطای بارگذاری مراجعه نمایید";
             }
             elseif (count($import_errors) > 0) {
                 $flag = "warning";
-                $message = "عملیات به طور کامل انجام نشد! لطفا به قسمت خطای بارگذاری مرجعه نمایید";
+                $message = "عملیات به طور کامل انجام نشد! لطفا به قسمت خطای بارگذاری مراجعه نمایید";
             }
             else
                 $message = "عملیات با موفقیت انجام شد";

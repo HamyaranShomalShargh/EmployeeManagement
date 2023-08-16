@@ -25,12 +25,11 @@ class EmployeeAppointmentLetterController extends Controller
     {
         Gate::authorize('create',"EmployeePaySlips");
         try {
-            $custom_groups = CustomGroup::with(["employees.employee.user","employees.employee.contract"])->whereHas("user",function ($query){
+            $custom_groups = CustomGroup::query()->whereHas("user",function ($query){
                 $query->where("id","=",Auth::id());
             })->get();
             return view("staff.employee_appointment_letter", [
                 "organizations" => $this->allowed_contracts("tree"),
-                "contracts" => $this->allowed_contracts()->toArray(),
                 "custom_groups" => $custom_groups,
             ]);
         }

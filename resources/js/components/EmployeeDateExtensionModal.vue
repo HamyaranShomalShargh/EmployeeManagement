@@ -337,7 +337,7 @@ export default {
                                         if (response.data.data) {
                                             self.$root.$data.user_allowed_contracts = response.data.data.contracts;
                                             self.$root.$data.user_allowed_groups = response.data.data.groups;
-                                            self.$emit("update_table");
+                                            self.$root.$data.table_data_records = [];
                                         }
                                         switch (response.data["result"]) {
                                             case "success": {

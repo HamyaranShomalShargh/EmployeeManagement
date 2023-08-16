@@ -10,7 +10,7 @@
             <div class="fieldset">
                 <span class="legend iransans">قرارداد نهایی</span>
                 <div class="fieldset-body">
-                    <tree-select :id="'target_contract'" @contract_selected="TargetSelected" dir="rtl" :is_multiple="false" :placeholder="'انتخاب کنید'" :database="$root.organizations"></tree-select>
+                    <tree-select :branch_node="true" :id="'target_contract'" @contract_selected="TargetSelected" dir="rtl" :is_multiple="false" :placeholder="'انتخاب کنید'" :database="$root.organizations"></tree-select>
                 </div>
             </div>
         </div>
@@ -114,9 +114,7 @@ export default {
                                     if (response?.data) {
                                         switch (response.data["result"]) {
                                             case "success": {
-                                                self.$root.$data.user_allowed_contracts = response.data?.contracts;
-                                                self.$root.$data.user_allowed_groups = response.data?.groups;
-                                                self.$emit("update_table");
+                                                self.$root.$data.table_data_records = [];
                                                 alertify.notify(response.data["message"], 'success', "5");
                                                 break;
                                             }

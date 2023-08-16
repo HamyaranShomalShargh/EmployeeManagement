@@ -24,7 +24,7 @@ class EmployeeDocController extends Controller
         ])->deleteFileAfterSend(true);
     }
     public function print_docs($path,$config = null){
-        $pdf = PDF::loadView('pdf.doc_print', ["image" => base64_encode(Storage::disk("employee_docs")->get(str_replace("@","/",$path)))],[], [
+        $pdf = PDF::loadView('layouts.pdf.doc_print', ["image" => base64_encode(Storage::disk("employee_docs")->get(str_replace("@","/",$path)))],[], [
             'format' => 'A4-P'
         ]);
         Session::put('page-config',collect(json_decode($config,true)));

@@ -174,6 +174,86 @@
                                     </td>
                                 </tr>
                                 </tbody>
+                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
+                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
+                                    <td>@{{employee.name}}</td>
+                                    <td>@{{employee.national_code}}</td>
+                                    <td>@{{employee.contract.organization.name}}</td>
+                                    <td v-text="PersianDateString(employee.created_at)"></td>
+                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
+                                </tr>
+                                </tbody>
+                                <tbody v-else>
+                                <tr v-if="RegistrationData.length === 0">
+                                    <td colspan="5" class="text-center p-4">
+                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                                    </td>
+                                </tr>
+                                </tbody>
+                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
+                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
+                                    <td>@{{employee.name}}</td>
+                                    <td>@{{employee.national_code}}</td>
+                                    <td>@{{employee.contract.organization.name}}</td>
+                                    <td v-text="PersianDateString(employee.created_at)"></td>
+                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
+                                </tr>
+                                </tbody>
+                                <tbody v-else>
+                                <tr v-if="RegistrationData.length === 0">
+                                    <td colspan="5" class="text-center p-4">
+                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                                    </td>
+                                </tr>
+                                </tbody>
+                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
+                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
+                                    <td>@{{employee.name}}</td>
+                                    <td>@{{employee.national_code}}</td>
+                                    <td>@{{employee.contract.organization.name}}</td>
+                                    <td v-text="PersianDateString(employee.created_at)"></td>
+                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
+                                </tr>
+                                </tbody>
+                                <tbody v-else>
+                                <tr v-if="RegistrationData.length === 0">
+                                    <td colspan="5" class="text-center p-4">
+                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                                    </td>
+                                </tr>
+                                </tbody>
+                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
+                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
+                                    <td>@{{employee.name}}</td>
+                                    <td>@{{employee.national_code}}</td>
+                                    <td>@{{employee.contract.organization.name}}</td>
+                                    <td v-text="PersianDateString(employee.created_at)"></td>
+                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
+                                </tr>
+                                </tbody>
+                                <tbody v-else>
+                                <tr v-if="RegistrationData.length === 0">
+                                    <td colspan="5" class="text-center p-4">
+                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                                    </td>
+                                </tr>
+                                </tbody>
+                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
+                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
+                                    <td>@{{employee.name}}</td>
+                                    <td>@{{employee.national_code}}</td>
+                                    <td>@{{employee.contract.organization.name}}</td>
+                                    <td v-text="PersianDateString(employee.created_at)"></td>
+                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
+                                </tr>
+                                </tbody>
+                                <tbody v-else>
+                                <tr v-if="RegistrationData.length === 0">
+                                    <td colspan="5" class="text-center p-4">
+                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                                    </td>
+                                </tr>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -349,17 +429,21 @@
             @endcan
         </div>
     </div>
-    <div v-cloak class="container-fluid pt-4 px-4 pb-4">
+    <div v-cloak class="container-fluid w-100 idle-information px-4">
         <div class="bg-dark rounded p-4">
-            <div class="row">
-                <div class="col-12 col-sm-6 text-center text-sm-start">
-                    <span class="iransans white-color">همیاران شمال شرق, کلیه حقوق محفوظ است.</span>
-                    <br/>
+            <div class="d-flex flex-row align-items-center justify-content-between flex-wrap gap-2 gap-lg-0">
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex align-items-center justify-content-start gap-2">
+                        <img alt="همیاران شمال شرق" class="pb-1" style="width: 15px;height: auto" src="{{asset("/images/logo.png")}}">
+                        <span class="iransans white-color">
+                            همیاران شمال شرق, کلیه حقوق محفوظ است.
+                            {{"(".verta()->format("F Y").")"}}
+                        </span>
+                    </div>
                     <span class="iransans text-muted">نسخه 3.0</span>
                 </div>
-                <div class="col-12 col-sm-6 text-center text-sm-end">
+                <div class="d-flex flex-column gap-2">
                     <span class="iransans white-color">طراحی و توسعه</span>
-                    <br/>
                     <span class="iransans text-muted">مسعود ملایریان</span>
                 </div>
             </div>

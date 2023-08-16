@@ -13,8 +13,8 @@
                 </span>
                 <div class="fieldset-body">
                     <h6 class="iransans mb-3">قرارداد(های) درج شده به ترتیب از راست به چپ در تاریخ مشخص شده و توسط شخص درج شده تبدیل شده اند. </h6>
-                    <div v-if="$root.$data.employees.contract_conversions.length > 0" class="w-100 d-flex flex-row align-items-center justify-content-start flex-wrap gap-3">
-                        <div v-for="(conversion,index) in $root.$data.employees.contract_conversions" class="d-flex flex-row align-items-center justify-content-start gap-3">
+                    <div v-if="history?.conversions" class="w-100 d-flex flex-row align-items-center justify-content-start flex-wrap gap-3">
+                        <div v-for="(conversion,index) in history.conversions" class="d-flex flex-row align-items-center justify-content-start gap-3">
                             <i v-if="index > 0" class="fa fa-arrow-left fa-1-6x"></i>
                             <div class="d-flex flex-column align-items-center justify-content-center gap-2 border px-5 py-3" :key="index">
                                 <i class="fas fa-folder fa-3x"></i>
@@ -35,8 +35,8 @@
                 </span>
                 <div class="fieldset-body">
                     <h6 class="iransans mb-3">تاریخ(های) درج شده به ترتیب از راست به چپ در تاریخ مشخص شده و توسط شخص درج شده تمدید شده اند. </h6>
-                    <div v-if="$root.$data.employees.contract_extensions.length > 0" class="w-100 d-flex flex-row align-items-center justify-content-start flex-wrap gap-3">
-                        <div v-for="(extension,index) in $root.$data.employees.contract_extensions" class="d-flex flex-row align-items-center justify-content-start gap-3">
+                    <div v-if="history?.extensions" class="w-100 d-flex flex-row align-items-center justify-content-start flex-wrap gap-3">
+                        <div v-for="(extension,index) in history.extensions" class="d-flex flex-row align-items-center justify-content-start gap-3">
                             <i v-if="index > 0" class="fa fa-arrow-left fa-1-6x"></i>
                             <div class="d-flex flex-column align-items-center justify-content-center gap-2 border px-5 py-3" :key="index">
                                 <div class="border border-dark bg-light p-2 d-flex flex-column align-items-center justify-content-center rounded-2 gap-2">
@@ -66,6 +66,7 @@
 
 <script>
 import route from "ziggy-js";
+import alertify from "alertifyjs";
 
 export default {
     name: "EmployeeHistoryModal",
@@ -74,9 +75,29 @@ export default {
         return {
             reference: null,
             data: null,
-            auth_type: "national_code",
-            password: null
+            history: []
         }
+    },
+    mounted() {
+        const self = this;
+        axios.post(route("EmployeesManagement.history"), {"employee_id": self.$data.data})
+            .then(function (response) {
+                if (response?.data) {
+                    switch (response.data.result) {
+                        case "success": {
+                            self.history = response.data?.history;
+                            alertify.notify("اطلاعات با موفقیت دریافت شد", 'success', "5");
+                            break;
+                        }
+                        case "fail": {
+                            alertify.notify(response.data["message"], 'error', "30");
+                            break;
+                        }
+                    }
+                }
+            }).catch(function (error) {
+            alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
+        });
     },
     methods:{
         ReferenceChecked(ref){

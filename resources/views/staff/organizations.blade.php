@@ -2,9 +2,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">سازمان ها</h5>
-            <span>(ایجاد، جستجو و ویرایش)</span>
+            <h4 class="iransans d-inline-block m-0 fw-bolder">
+                سازمان ها
+                <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
+            </h4>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -19,31 +20,30 @@
 @section('content')
     <div class="page-content w-100 p-3">
         <div class="input-group mb-2">
-            <button class="btn btn-outline-primary d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_organization_modal">
-                <i class="fa fa-plus fa-1-4x me-1"></i>
-                <span class="iransans create-button">سازمان جدید</span>
+            <button class="btn btn-primary d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_organization_modal">
+                <i class="fa fa-plus fa-1-6x"></i>
             </button>
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام">
+            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام" data-table="organizations_table" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table>
+                <table id="organizations_table" class="table table-hover table-striped pointer-cursor sortArrowWhite" data-filter="[1]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col"><span>شماره</span></th>
+                        <th scope="col" data-sortas="numeric"><span>شماره</span></th>
                         <th scope="col"><span>نام</span></th>
                         <th scope="col"><span>وضعیت</span></th>
                         <th scope="col"><span>توسط</span></th>
                         <th scope="col"><span>تاریخ ثبت</span></th>
                         <th scope="col"><span>تاریخ ویرایش</span></th>
-                        <th scope="col"><span>عملیات</span></th>
+                        <th scope="col" style="width: 150px"><span>عملیات</span></th>
                     </tr>
                     </thead>
                     <tbody>
                     @forelse($organizations as $organization)
                         <tr>
-                            <td><span class="iransans">{{ $organization->id }}</span></td>
+                            <td class="iransans">{{ $organization->id }}</td>
                             <td><span class="iransans">{{ $organization->name }}</span></td>
                             <td>
                                 <span class="iransans">
@@ -57,51 +57,64 @@
                             <td><span class="iransans">{{ $organization->user->name }}</span></td>
                             <td><span class="iransans">{{ verta($organization->cretaed_at)->format("Y/m/d") }}</span></td>
                             <td><span class="iransans">{{ verta($organization->updated_at)->format("Y/m/d") }}</span></td>
-                            <td class="position-relative">
-                                <div class="dropdown table-functions iransans">
-                                    <a class="table-functions-button dropdown-toggle border-0 iransans info-color" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-cog fa-1-2x"></i>
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        @can("activation", "Organizations")
-                                        <form class="w-100" id="activation-form-{{ $organization->id }}" action="{{ route("Organizations.activation",$organization->id) }}" method="POST" v-on:submit="submit_form">
-                                            @csrf
-                                            <button type="submit" form="activation-form-{{ $organization->id }}" class="dropdown-item">
+                            <td>
+                                <div class="d-flex flex-row flex-wrap align-items-center justify-content-center gap-2 gap-lg-3">
+                                    @can("activation", "Organizations")
+                                        <div>
+                                            <form hidden id="activation-form-{{ $organization->id }}" action="{{ route("Organizations.activation",$organization->id) }}" method="POST" v-on:submit="submit_form">
+                                                @csrf
+                                            </form>
+                                            <button form="activation-form-{{ $organization->id }}" class="btn btn-sm btn-outline-dark">
                                                 @if($organization->inactive == 0)
-                                                    <i class="fa fa-lock"></i>
-                                                    <span>غیر فعال سازی</span>
+                                                    <i class="far fa-lock fa-1-2x vertical-middle"></i>
                                                 @elseif($organization->inactive == 1)
-                                                    <i class="fa fa-lock-open"></i>
-                                                    <span>فعال سازی</span>
+                                                    <i class="far fa-lock-open fa-1-2x vertical-middle"></i>
                                                 @endif
                                             </button>
-                                        </form>
-                                        @endcan
-                                        @can("edit", "Organizations")
-                                            <div class="dropdown-divider"></div>
-                                            <a role="button" href="{{ route("Organizations.edit",$organization->id) }}" class="dropdown-item">
-                                                <i class="fa fa-edit"></i>
-                                                <span class="iransans">ویرایش</span>
-                                            </a>
-                                        @endcan
-                                        @can("delete","Organizations")
-                                            <div class="dropdown-divider"></div>
-                                            <form class="w-100" id="delete-form-{{ $organization->id }}" action="{{ route("Organizations.destroy",$organization->id) }}" method="POST" v-on:submit="submit_form">
+                                        </div>
+                                    @endcan
+                                    @can("edit", "Organizations")
+                                        <a role="button" class="btn btn-sm btn-outline-dark" href="{{route("Organizations.edit",$organization->id)}}">
+                                            <i class="far fa-edit fa-1-2x vertical-middle"></i>
+                                        </a>
+                                    @endcan
+                                    @can("delete","Organizations")
+                                        <div>
+                                            <form hidden id="delete-form-{{ $organization->id }}" action="{{ route("Organizations.destroy",$organization->id) }}" method="POST" v-on:submit="submit_form">
                                                 @csrf
                                                 @method("Delete")
-                                                <button type="submit" form="delete-form-{{ $organization->id }}" class="dropdown-item">
-                                                    <i class="fa fa-trash"></i>
-                                                    <span class="iransans">حذف</span>
-                                                </button>
                                             </form>
-                                        @endcan
-                                    </div>
+                                            <button form="delete-form-{{ $organization->id }}" class="btn btn-sm btn-outline-dark">
+                                                <i class="far fa-trash fa-1-2x vertical-middle"></i>
+                                            </button>
+                                        </div>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
                     @empty
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                       <td colspan="7" class="py-2 px-3">
+                           <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                               <p class="iransans white-color mb-0">
+                                   مجموع :
+                                   {{ count($organizations) }}
+                               </p>
+                               <p class="iransans white-color mb-0">
+                                   فعال :
+                                   {{  count($organizations->where("inactive",0)) }}
+                               </p>
+                               <p class="iransans white-color mb-0">
+                                   غیر فعال :
+                                   {{ count($organizations->where("inactive",1)) }}
+                               </p>
+                           </div>
+                       </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

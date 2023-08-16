@@ -132,7 +132,7 @@ hr{
     min-height: 100vh;
 }
 .app-container{
-    height: 100vh;
+    min-height: 100vh;
     overflow: hidden;
 }
 .company_name{
@@ -315,6 +315,10 @@ hr{
     width: 100%;
     height: 100vh;
     overflow-y: auto;
+    background: #ffffff;
+}
+.content.idle{
+    background: #000000;
 }
 .content-header{
     height: 50px;
@@ -1041,16 +1045,14 @@ input[type='text'],input[type='password'],input[type='number'],select{
     z-index: 1;
     margin: auto;
     transition: all 0.2s ease-in-out;
-    max-height: 70vh;
-    overflow-y: visible;
+    overflow-y: auto;
     overflow-x: auto;
     min-height: auto;
 }
 .table-scroll table:not(.dropdown-table) {
     width: 100%;
-    min-width: 1280px;
     margin: auto;
-    /*border-collapse: separate;*/
+    border-collapse: separate;
     border-spacing: 0;
 }
 .table-wrap {
@@ -1568,6 +1570,12 @@ button span{
     left: 0;
     background: rgba(0,0,0,0.75);
 }
+.idle-information{
+    position: static;
+    bottom: 0;
+    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
+}
 @media screen and (max-width: 1600px){
 }
 @media screen and (max-width: 1400px){
@@ -1579,6 +1587,13 @@ button span{
     .elua-container{
         max-height: 135px;
         overflow-y: auto
+    }
+    .idle-information{
+        position: relative;
+        margin-bottom: 70px;
+    }
+    .table-scroll table:not(.dropdown-table) {
+        min-width: 1280px;
     }
     .sidebar{
         width: 0;

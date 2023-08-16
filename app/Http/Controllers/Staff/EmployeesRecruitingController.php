@@ -10,6 +10,7 @@ use App\Models\ContractPreEmployee;
 use App\Models\Employee;
 use App\Models\SmsPhraseCategory;
 use App\Models\User;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -129,16 +130,16 @@ class EmployeesRecruitingController extends Controller
             $validated = $request->validated();
             foreach ($validated["employees"] as $employee) {
                 $pre_employee = ContractPreEmployee::query()->findOrFail($employee);
-                $employee_db = Employee::employee($pre_employee->national_code);
-                if ($pre_employee) {
-                    $pre_employee->update(["to_reload" => 1]);
-                    $employee_db->reload_data()->updateOrCreate(["reloadable_id" => $employee_db->id, "national_code" => $employee_db->national_code], [
-                        "national_code" => $employee_db->national_code,
+                if ($pre_employee != null) {
+                    $pre_employee->reload_data()->updateOrCreate(["reloadable_id" => $pre_employee->id, "national_code" => $pre_employee->national_code], [
+                        "national_code" => $pre_employee->national_code,
                         "db_titles" => isset($validated["db_titles"]) ? json_encode($validated["db_titles"], JSON_UNESCAPED_UNICODE) : null,
                         "doc_titles" => isset($validated["doc_titles"]) ? json_encode($validated["doc_titles"], JSON_UNESCAPED_UNICODE) : null,
                     ]);
                     isset($validated["send_sms_permission"]) ? $mobiles [] = $pre_employee->mobile : null;
                 }
+                else
+                    throw new Exception("برای پرسنل انتخاب شده اطلاعات ثبت نام وجود ندارد");
             }
             if (count($mobiles) > 0) $this->send_sms($mobiles, $validated["sms_text"]);
             DB::commit();

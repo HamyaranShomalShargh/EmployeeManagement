@@ -16,6 +16,7 @@ use App\Models\BackgroundCheckApplication;
 use App\Models\CompanyInformation;
 use App\Models\ContractConversion;
 use App\Models\ContractExtension;
+use App\Models\ContractPreEmployee;
 use App\Models\CustomGroup;
 use App\Models\DbKeyword;
 use App\Models\Employee;
@@ -44,6 +45,7 @@ use Mpdf\QrCode\QrCode;
 use Mpdf\QrCode\Output;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 use \Illuminate\Support\Str;
+use PHPUnit\TextUI\XmlConfiguration\Group;
 use Throwable;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 
@@ -52,14 +54,70 @@ class EmployeeManagementController extends Controller
     public function index(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse
     {
         Gate::authorize('index',"EmployeesManagement");
+        try {
             return view("staff.employees_management", [
                 "organizations" => $this->allowed_contracts("tree"),
-                "contracts" => $this->allowed_contracts()->toArray(),
                 "custom_groups" => $this->allowed_groups()->toArray(),
                 "sms_phrase_categories" => SmsPhraseCategory::query()->with("phrases")->get(),
                 "applications" => ApplicationForm::all()
             ]);
+        }
+        catch (Throwable $error){
+            return redirect()->back()->withErrors(["logical" => $error->getMessage()]);
+        }
+    }
 
+    function get_employees(Request $request): array
+    {
+        try {
+            $request->validate([
+                "reference_type" => ["required",Rule::in(["contract","group"])],
+                "reference_id" => "required"
+            ],[
+                "reference_type.required" => "نوع مرجع اطلاعات نامشخص می باشد",
+                "reference_type.in" => "نوع مرجع اطلاعات نامشخص می باشد",
+                "reference_id.required" => "شناسه مرجع اطلاعات نامشخص می باشد",
+            ]);
+            $type = $request->input("reference_type");
+            $id = $request->input("reference_id");
+            $response["result"] = "success";
+            switch ($type){
+                case "contract":{
+                    $response["employees"] = Employee::query()->with(["contract.organization","registrant_user","user"])
+                        ->where("contract_id","=",$id)->get()->toArray();
+                    break;
+                }
+                case "group":{
+                    $group = CustomGroup::query()->with("employees")->findOrFail($id)->toArray();
+                    $response["employees"] = Employee::query()->with(["contract.organization","registrant_user","user"])
+                        ->whereIn("id",array_column($group["employees"],"employee_id"))->get()->toArray();
+                    break;
+                }
+            }
+            return $response;
+        }
+        catch (Throwable $error){
+            $response["result"] = "fail";
+            $response["message"] = $error->getMessage();
+            return $response;
+        }
+    }
+    function find_employees(Request $request): array
+    {
+        try {
+            $keyword = $request->input("keyword");
+            is_numeric($keyword) ? $keyword = $keyword."%" : $keyword = "%".$keyword."%";
+            $response["result"] = "success";
+            $exist_employees = Employee::find($keyword);
+            $register_employees = ContractPreEmployee::find($keyword);
+            $exist_employees->isNotEmpty() ? $response["employees"] = $exist_employees->toArray() : $response["registration"] = $register_employees->toArray();
+            return $response;
+        }
+        catch (Throwable $error){
+            $response["result"] = "fail";
+            $response["message"] = $error->getMessage();
+            return $response;
+        }
     }
     public function excel_download($option,$data = null)
     {
@@ -173,6 +231,7 @@ class EmployeeManagementController extends Controller
     }
     public function add_employee(Request $request): array
     {
+        Gate::authorize('add_new_item',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -258,8 +317,6 @@ class EmployeeManagementController extends Controller
             DB::commit();
             $response["result"] = "success";
             $response["message"] = $message;
-            $response["contracts"] = $this->allowed_contracts()->toArray();
-            $response["groups"] = $this->allowed_groups()->toArray();
             return $response;
         }
         catch (Throwable $error){
@@ -271,6 +328,7 @@ class EmployeeManagementController extends Controller
     }
     public function delete_employee(Request $request): array
     {
+        Gate::authorize('delete_item',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -329,8 +387,6 @@ class EmployeeManagementController extends Controller
             DB::commit();
             $response["result"] = "success";
             $response["message"] = "عملیات با موفقیت انجام شد";
-            $response["contracts"] = $this->allowed_contracts()->toArray();
-            $response["groups"] = $this->allowed_groups()->toArray();
             return $response;
         }
         catch (Throwable $error){
@@ -340,8 +396,29 @@ class EmployeeManagementController extends Controller
             return $response;
         }
     }
+    public function edit_item(Request $request): array
+    {
+        Gate::authorize('edit_item',"EmployeesManagement");
+        try {
+            $response = [];
+            $data = json_decode($request->input("data"),true);
+            $employee = Employee::query()->findOrFail($data["id"]);
+            $employee->update($data);
+            $response["result"] = "success";
+            $response["message"] = "عملیات ذخیره سازی با موفقیت انجام شد";
+            $response["data"] = $data;
+            return $response;
+        }
+        catch (Throwable $error){
+            $response["result"] = "fail";
+            $response["message"] = $error->getMessage();
+            $response["data"] = $request->toArray();
+            return $response;
+        }
+    }
     public function employee_status(Request $request): array
     {
+        Gate::authorize('item_status',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -405,8 +482,6 @@ class EmployeeManagementController extends Controller
             DB::commit();
             $response["result"] = "success";
             $response["message"] = "عملیات با موفقیت انجام شد";
-            $response["contracts"] = $this->allowed_contracts()->toArray();
-            $response["groups"] = $this->allowed_groups()->toArray();
             return $response;
         }
         catch (Throwable $error){
@@ -418,6 +493,7 @@ class EmployeeManagementController extends Controller
     }
     public function employee_auth(Request $request): array
     {
+        Gate::authorize('item_auth',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -506,8 +582,6 @@ class EmployeeManagementController extends Controller
             DB::commit();
             $response["result"] = "success";
             $response["message"] = "عملیات با موفقیت انجام شد";
-            $response["contracts"] = $this->allowed_contracts()->toArray();
-            $response["groups"] = $this->allowed_groups()->toArray();
             return $response;
         }
         catch (Throwable $error){
@@ -519,6 +593,7 @@ class EmployeeManagementController extends Controller
     }
     public function employee_refresh_data(Request $request): array
     {
+        Gate::authorize('item_data_refresh',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -615,8 +690,6 @@ class EmployeeManagementController extends Controller
             DB::commit();
             $response["result"] = "success";
             $response["message"] = "عملیات با موفقیت انجام شد";
-            $response["contracts"] = $this->allowed_contracts()->toArray();
-            $response["groups"] = $this->allowed_groups()->toArray();
             return $response;
         }
         catch (Throwable $error){
@@ -628,6 +701,7 @@ class EmployeeManagementController extends Controller
     }
     public function employee_date_extension(Request $request): array
     {
+        Gate::authorize('item_date_extension',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -796,8 +870,6 @@ class EmployeeManagementController extends Controller
             DB::commit();
             $response["result"] = "success";
             $response["message"] = "عملیات با موفقیت انجام شد";
-            $response["contracts"] = $this->allowed_contracts()->toArray();
-            $response["groups"] = $this->allowed_groups()->toArray();
             return $response;
         }
         catch (Throwable $error){
@@ -809,6 +881,7 @@ class EmployeeManagementController extends Controller
     }
     public function employee_contract_conversion(Request $request): array
     {
+        Gate::authorize('item_contract_conversion',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -873,8 +946,6 @@ class EmployeeManagementController extends Controller
             DB::commit();
             $response["result"] = "success";
             $response["message"] = "عملیات با موفقیت انجام شد";
-            $response["contracts"] = $this->allowed_contracts()->toArray();
-            $response["groups"] = $this->allowed_groups()->toArray();
             return $response;
         }
         catch (Throwable $error) {
@@ -886,6 +957,7 @@ class EmployeeManagementController extends Controller
     }
     public function employee_excel_list(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse|array
     {
+        Gate::authorize('item_excel_list',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -951,6 +1023,7 @@ class EmployeeManagementController extends Controller
     }
     public function employee_send_sms(Request $request): array
     {
+        Gate::authorize('send_sms',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -1017,6 +1090,7 @@ class EmployeeManagementController extends Controller
     }
     public function employee_send_ticket(Request $request): array
     {
+        Gate::authorize('send_ticket',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
@@ -1083,8 +1157,6 @@ class EmployeeManagementController extends Controller
             DB::commit();
             $response["result"] = "success";
             $response["message"] = "ارسال تیکت پشتیبانی با موفقیت انجام شد";
-            $response["contracts"] = $this->allowed_contracts()->toArray();
-            $response["groups"] = $this->allowed_groups()->toArray();
             return $response;
         }
         catch (Throwable $error) {
@@ -1094,15 +1166,55 @@ class EmployeeManagementController extends Controller
             return $response;
         }
     }
+    public function requests_history(Request $request): array
+    {
+        Gate::authorize('requests_history',"EmployeesManagement");
+        try {
+            $response = [];
+            $request->validate([
+                "employee_id" => "required"], ["employee_id.required" => "پرسنلی انتخاب نشده است"]);
+            $employee_id = $request->input("employee_id");
+            $response["result"] = "success";
+            $response["automations"] = Automation::query()->with(["automationable","user","employee","contract"])->where("employee_id","=",$employee_id)->get()->toArray();
+            return $response;
+        }
+        catch (Throwable $error) {
+            $response["result"] = "fail";
+            $response["message"] = $error->getMessage() . $error->getLine();
+            return $response;
+        }
+    }
+    public function history(Request $request): array
+    {
+        Gate::authorize('history',"EmployeesManagement");
+        try {
+            $response = [];
+            $request->validate([
+                "employee_id" => "required"], ["employee_id.required" => "پرسنلی انتخاب نشده است"]);
+            $employee_id = $request->input("employee_id");
+            $employee = Employee::query()->with(["contract_extensions.user","contract_conversions.contract","contract_conversions.user"])
+                ->findOrFail($employee_id)->toArray();
+            $response["result"] = "success";
+            $response["history"] = ["extensions" => $employee["contract_extensions"], "conversions" => $employee["contract_conversions"]];
+            return $response;
+        }
+        catch (Throwable $error) {
+            $response["result"] = "fail";
+            $response["message"] = $error->getMessage() . $error->getLine();
+            return $response;
+        }
+    }
     public function employee_batch_application(Request $request): array
     {
+        Gate::authorize('item_batch_application',"EmployeesManagement");
         try {
             DB::beginTransaction();
             $response = [];
             $request->validate([
-                "reference" => ["required", Rule::in(['organization', 'group', 'custom'])],
+                "reference" => ["required", Rule::in(['organization', 'group', 'custom','individual'])],
                 "contract_id" => ["required_if:reference,organization"],
                 "group_id" => ["required_if:reference,group"],
+                "employee_id" => ["required_if:reference,individual"],
                 "employees" => ["required_if:reference,custom"],
                 "application_type" => ["required"],
                 "operation_type" => ["required" , Rule::in(['view','save'])],
@@ -1112,6 +1224,7 @@ class EmployeeManagementController extends Controller
                 "contract_id.required_if" => "سازمان و قراردادی انتخاب نشده است",
                 "group_id.required_if" => "گروه سفارشی انتخاب نشده است",
                 "employees.required_if" => "پرسنلی بارگذاری نشده است",
+                "employee_id.required_if" => "پرسنلی بارگذاری نشده است",
                 "application_type.required" => "انتخاب نوع درخواست الزامی می باشد",
                 "operation_type.required" => "انتخاب نوع عملیات الزامی می باشد",
                 "operation_type.in" => "نوع عملیات ارسال شده معتبر نمی باشد",
@@ -1306,6 +1419,7 @@ class EmployeeManagementController extends Controller
     }
     public function get_deleted_employees(): array
     {
+        Gate::authorize('get_deleted_employees',"EmployeesManagement");
         try {
             $response["result"] = "success";
             $response["message"] = "اطلاعات با موفقیت دریافت شد";
@@ -1322,6 +1436,7 @@ class EmployeeManagementController extends Controller
     }
     public function recover_employee(Request $request): array
     {
+        Gate::authorize('recover_employee',"EmployeesManagement");
         try {
             $request->validate([
                 "employee_id" => "required",
@@ -1333,8 +1448,6 @@ class EmployeeManagementController extends Controller
             $response["message"] = "اطلاعات با موفقیت دریافت شد";
             $response["deleted_employees"] = Employee::onlyTrashed()->with(["contract.organization","registrant_user"])
                 ->whereIn("contract_id",$this->allowed_contracts()->pluck("contracts.*.id")->flatten()->unique())->get()->toArray();
-            $response["contracts"] = $this->allowed_contracts()->toArray();
-            $response["groups"] = $this->allowed_groups()->toArray();
             return $response;
         }
         catch (Throwable $error) {
@@ -1347,6 +1460,7 @@ class EmployeeManagementController extends Controller
     }
     public function employee_get_tickets(Request $request): array
     {
+        Gate::authorize('get_tickets',"EmployeesManagement");
         try {
             $request->validate([
                 "id" => "required",

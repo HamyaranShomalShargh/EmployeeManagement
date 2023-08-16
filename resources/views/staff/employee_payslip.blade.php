@@ -1,4 +1,4 @@
-
+@extends("staff.staff_dashboard")
 @section('variables')
     <script>
         const allowed_organizations = @json($organizations);
@@ -8,13 +8,14 @@
             const excel_columns_data = @json(json_decode(old("excel_columns"),true));
         </script>
     @endif
-@endsection@extends("staff.staff_dashboard")
+@endsection
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">فیش حقوقی پرسنل</h5>
-            <span>(ایجاد، جستجو و ویرایش)</span>
+            <h4 class="iransans d-inline-block m-0 fw-bolder">
+                فیش حقوقی پرسنل
+                <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
+            </h4>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -38,35 +39,33 @@
             <button class="btn btn-outline-danger d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#delete_all_modal">
                 <i class="fa fa-trash-can fa-1-7x"></i>
             </button>
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام و کد ملی">
+            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام ، کد ملی ، کد شناسایی ، ساز مان و قرارداد" data-table="employee_payslips_table" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table>
+                <table id="employee_payslips_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2,3,4]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col"><span>شماره</span></th>
-                        <th scope="col"><span>کد شناسایی</span></th>
-                        <th scope="col"><span>نام</span></th>
-                        <th scope="col"><span>سازمان</span></th>
-                        <th scope="col"><span>قراداد</span></th>
-                        <th scope="col"><span>سال</span></th>
-                        <th scope="col"><span>ماه</span></th>
-                        <th scope="col"><span>توسط</span></th>
-                        <th scope="col"><span>تاریخ ثبت</span></th>
-                        <th scope="col"><span>تاریخ ویرایش</span></th>
-                        <th scope="col"><span>عملیات</span></th>
+                        <th scope="col" style="width: 70px" data-sortas="numeric"><span>شماره</span></th>
+                        <th scope="col" style="width: 200px"><span>نام</span></th>
+                        <th scope="col" style="width: 100px"><span>کد ملی</span></th>
+                        <th scope="col" style="width: 120px"><span>کد شناسایی</span></th>
+                        <th scope="col" style="width: 60px"><span>سال</span></th>
+                        <th scope="col" style="width: 80px"><span>ماه</span></th>
+                        <th scope="col" style="width: 120px"><span>توسط</span></th>
+                        <th scope="col" style="width: 130px"><span>تاریخ ثبت</span></th>
+                        <th scope="col" style="width: 130px"><span>تاریخ ویرایش</span></th>
+                        <th scope="col" style="width: 150px"><span>عملیات</span></th>
                     </tr>
                     </thead>
                     <tbody>
                     @forelse($employees as $employee)
                         <tr>
-                            <td><span class="iransans">{{ $employee->id }}</span></td>
-                            <td><span class="iransans">{{ $employee->i_number }}</span></td>
+                            <td class="iransans">{{ $employee->id }}</td>
                             <td><span class="iransans">{{ $employee->employee->name }}</span></td>
-                            <td><span class="iransans">{{ $employee->employee->contract->organization->name }}</span></td>
-                            <td><span class="iransans">{{ $employee->employee->contract->name }}</span></td>
+                            <td><span class="iransans">{{ $employee->employee->national_code }}</span></td>
+                            <td><span class="iransans">{{ $employee->i_number }}</span></td>
                             <td><span class="iransans">{{ $employee->persian_year }}</span></td>
                             <td><span class="iransans">{{ $employee->persian_month_name }}</span></td>
                             <td><span class="iransans">{{ $employee->user->name }}</span></td>
@@ -107,9 +106,25 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="11"><span class="iransans">اطلاعاتی یافت نشد!</span></td></tr>
+                        @if($query)
+                            <tr><td colspan="10"><span class="iransans">اطلاعاتی در این ماه و سال وجود ندارد</span></td></tr>
+                        @else
+                            <tr><td colspan="10"><span class="iransans">در انتظار انتخاب قرارداد...</span></td></tr>
+                        @endif
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    {{ count($employees) }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -138,11 +153,11 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title iransans">انتخاب پرسنل برای نمایش در جدول</h5>
+                    <h5 class="modal-title iransans">جستجو در اطلاعات فیش حقوقی</h5>
                 </div>
                 <div class="modal-body scroll-style">
                     <div class="row">
-                        <form id="search_form" class="p-3" action="{{ route("EmployeePaySlips.index") }}" method="get">
+                        <form id="search_form" class="p-3" action="{{ route("EmployeePaySlips.query") }}" method="post" v-on:submit="submit_form">
                             @csrf
                             <div class="col-12 mb-3">
                                 <div>

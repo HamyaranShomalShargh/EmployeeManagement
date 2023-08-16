@@ -172,26 +172,16 @@ class Controller extends BaseController
     }
     function allowed_groups(): \Illuminate\Database\Eloquent\Collection|array
     {
-        return CustomGroup::with([
-            "employees.employee.user",
-            "employees.employee.contract.organization",
-            "employees.employee.contract_extensions.user",
-            "employees.employee.contract_conversions.contract",
-            "employees.employee.contract_conversions.user",
-            "employees.employee.automations.user",
-            "employees.employee.automations.signs.user.role",
-            "employees.employee.automations.automationable",
-            "employees.employee.automations.comments.user.role"
-        ])->whereHas("user",function ($query){$query->where("id","=",Auth::id());})->get();
+        return CustomGroup::query()->whereHas("user",function ($query){$query->where("id","=",Auth::id());})->get();
     }
     function allowed_contracts($view = null): \Illuminate\Database\Eloquent\Collection|array
     {
         $user_contracts = Contract::query()->where("user_id","=",Auth::id())->pluck("id");
-        $result = (User::UserType() == "staff" ? Organization::query()->where("inactive","=",0)->with(["contracts.employees.contract.organization","contracts.employees.user","contracts.employees.registrant_user","contracts.employees.contract_extensions.user","contracts.employees.contract_conversions.contract","contracts.employees.contract_conversions.user","employees.employee.contract","contracts.employees.automations.user","contracts.employees.automations.signs.user.role","contracts.employees.automations.automationable","contracts.employees.automations.comments.user.role"])->whereHas("contracts",function($query)use($user_contracts){
+        $result = (User::UserType() == "staff" ? Organization::query()->where("inactive","=",0)->with(["contracts.employees.contract.organization","contracts.employees.user","contracts.employees.registrant_user"])->whereHas("contracts",function($query)use($user_contracts){
            $query->where("contracts.inactive","=",0)->whereIn("contracts.id",$user_contracts);
         })->whereHas("contracts.permitted_staffs",function($query){
            $query->where("contract_user.staff_id","=",Auth::id());})->get() :
-            User::UserType() == "admin") ? Organization::query()->where("inactive","=",0)->with(["contracts.employees.contract.organization","contracts.employees.user","contracts.employees.registrant_user","contracts.employees.contract_extensions.user","contracts.employees.contract_conversions.contract","contracts.employees.contract_conversions.user","contracts.employees.automations.user","contracts.employees.automations.signs.user.role","contracts.employees.automations.automationable","contracts.employees.automations.comments.user.role"])->whereHas("contracts",function($query){
+            User::UserType() == "admin") ? Organization::query()->where("inactive","=",0)->with(["contracts.employees.contract.organization","contracts.employees.user","contracts.employees.registrant_user"])->whereHas("contracts",function($query){
            $query->where("contracts.inactive","=",0);
         })->get(): abort(403);
         if (isset($view) && $view == "tree"){

@@ -2,7 +2,6 @@
 @section('variables')
     <script>
         const allowed_organizations = @json($organizations);
-        const allowed_contracts = @json($contracts);
         const allowed_groups = @json($custom_groups);
     </script>
 @endsection
@@ -19,7 +18,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100 p-3 pt-4">
         <reference-box @reference_selected="ReferenceSetup" @reference_check="ReferenceChecked" @employee_selected="EmployeeSelected" :refs_needed="[1,2,3,5]"></reference-box>
         <div v-cloak class="row">
             <div class="col-12 text-center">

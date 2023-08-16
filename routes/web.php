@@ -188,17 +188,22 @@ Route::group(['prefix'=>'Dashboard', 'middleware'=>['auth']],function() {
         Route::group(['prefix'=>'EmployeesManagement'],function (){
             Route::get("/index",[EmployeeManagementController::class,"index"])->name('EmployeesManagement.index');
             Route::group(['prefix' => 'Excel'],function (){
-                Route::get("/excel_download/{option}", [EmployeeManagementController::class, "excel_download"])->name("EmployeesManagement.excel_download");
-                Route::post("/excel_upload/{option}", [EmployeeManagementController::class, "excel_upload"])->name("EmployeesManagement.excel_upload");
+                Route::get("/download/{option}", [EmployeeManagementController::class, "excel_download"])->name("EmployeesManagement.excel_download");
+                Route::post("/upload/{option}", [EmployeeManagementController::class, "excel_upload"])->name("EmployeesManagement.excel_upload");
             });
             Route::group(['prefix' => 'Operation'],function (){
+                Route::post("/Employees", [EmployeeManagementController::class, "get_employees"])->name("EmployeesManagement.get_employees");
+                Route::post("/FindEmployees", [EmployeeManagementController::class, "find_employees"])->name("EmployeesManagement.find_employees");
                 Route::post("/Add", [EmployeeManagementController::class, "add_employee"])->name("EmployeesManagement.add_new_item");
                 Route::post("/Delete", [EmployeeManagementController::class, "delete_employee"])->name("EmployeesManagement.delete_item");
+                Route::post("/Edit", [EmployeeManagementController::class, "edit_item"])->name("EmployeesManagement.edit_item");
                 Route::post("/Status", [EmployeeManagementController::class, "employee_status"])->name("EmployeesManagement.item_status");
                 Route::post("/Authentication", [EmployeeManagementController::class, "employee_auth"])->name("EmployeesManagement.item_auth");
                 Route::post("/RefreshData", [EmployeeManagementController::class, "employee_refresh_data"])->name("EmployeesManagement.item_data_refresh");
                 Route::post("/DateExtension", [EmployeeManagementController::class, "employee_date_extension"])->name("EmployeesManagement.item_date_extension");
                 Route::post("/ContractConversion", [EmployeeManagementController::class, "employee_contract_conversion"])->name("EmployeesManagement.item_contract_conversion");
+                Route::post("/RequestsHistory", [EmployeeManagementController::class, "requests_history"])->name("EmployeesManagement.requests_history");
+                Route::post("/History", [EmployeeManagementController::class, "history"])->name("EmployeesManagement.history");
                 Route::post("/BatchApplication", [EmployeeManagementController::class, "employee_batch_application"])->name("EmployeesManagement.item_batch_application");
                 Route::post("/ExcelList", [EmployeeManagementController::class, "employee_excel_list"])->name("EmployeesManagement.item_excel_list");
                 Route::post("/SendTicket", [EmployeeManagementController::class, "employee_send_ticket"])->name("EmployeesManagement.send_ticket");
@@ -224,6 +229,7 @@ Route::group(['prefix'=>'Dashboard', 'middleware'=>['auth']],function() {
                 Route::post("/upload", [EmployeePaySlipController::class, "excel_upload"])->name("EmployeePaySlips.excel_upload");
             });
             Route::get("/index", [EmployeePaySlipController::class,"index"])->name("EmployeePaySlips.index");
+            Route::post("/query", [EmployeePaySlipController::class, "query"])->name("EmployeePaySlips.query");
             Route::get("/show/{id}", [EmployeePaySlipController::class,"show"])->name("EmployeePaySlips.show");
             Route::post("/store", [EmployeePaySlipController::class,"store"])->name("EmployeePaySlips.store");
             Route::get("/edit/{id}", [EmployeePaySlipController::class,"edit"])->name("EmployeePaySlips.edit");
@@ -254,6 +260,8 @@ Route::group(['prefix'=>'Dashboard', 'middleware'=>['auth']],function() {
                 Route::post("/upload", [EmployeeFinancialAdvantagesController::class, "excel_upload"])->name("EmployeeFinancialAdvantages.excel_upload");
             });
             Route::get("/index", [EmployeeFinancialAdvantagesController::class,"index"])->name("EmployeeFinancialAdvantages.index");
+            Route::post("/query", [EmployeeFinancialAdvantagesController::class, "query"])->name("EmployeeFinancialAdvantages.query");
+            Route::post("/get", [EmployeeFinancialAdvantagesController::class, "get_employees"])->name("EmployeeFinancialAdvantages.get_employees");
             Route::post("/store", [EmployeeFinancialAdvantagesController::class,"store"])->name("EmployeeFinancialAdvantages.store");
             Route::post("/storeSolo/", [EmployeeFinancialAdvantagesController::class,"storeSolo"])->name("EmployeeFinancialAdvantages.store_solo");
             Route::get("/edit/{id}", [EmployeeFinancialAdvantagesController::class,"edit"])->name("EmployeeFinancialAdvantages.edit");
@@ -437,19 +445,12 @@ Route::group(['prefix'=>'Validation'],function() {
 //        }
 //    }
 //});
-//Route::get("/bv",function (){
-//    $a = Automation::query()->findOrFail(42);
-//    $flow_details = json_decode($a->flow,true);
-//    $main_role = array_filter($flow_details,function ($flow){
-//        return $flow["is_main_role"] == 1;
-//    });
-//    if ($main_role){
-//        $user = $a->signs()->whereHas("user",function ($query) use ($main_role){
-//            $query->whereIn("users.role_id",array_column($main_role,"is_main_role"));
-//        })->first();
-//        dd($user);
-//    }
-//});
+Route::get("/bv",function (){
+    $employee = Employee::query()->with(["contract_extensions.user","contract_conversions.contract","contract_conversions.user"])->findOrFail(1)->toArray();
+    $response["result"] = "success";
+    $response["history"] = ["extensions" => $employee["contract_extensions"], "conversions" => $employee["contract_conversions"]];
+    dd($response);
+});
 Route::get("/optimize" ,function (){
     \Illuminate\Support\Facades\Artisan::call("optimize:clear");
 });

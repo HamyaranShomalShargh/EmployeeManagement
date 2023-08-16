@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Facades\Excel;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 use Throwable;
@@ -25,21 +26,35 @@ class EmployeePaySlipController extends Controller
     {
         Gate::authorize('index',"EmployeePaySlips");
         try {
-            $employees = [];
-            if ($request->has("contract_id") && $request->has("query_year") && $request->has("query_month")){
-                $employees = EmployeePaySlip::BatchPayslip($request->input("contract_id"),$request->input("query_year"),$request->input("query_month"));
-            }
             return view("staff.employee_payslip", [
                 "organizations" => $this->allowed_contracts("tree"),
                 "persian_month" => $this->persian_month(),
-                "employees" => $employees
+                "employees" => Session::has("employees") ? Session::get("employees") : [],
+                "query" => Session::has("query") ? Session::get("query") : false,
             ]);
         }
         catch (Throwable $error){
             return redirect()->back()->withErrors(["logical" => $error->getMessage()]);
         }
     }
-
+    public function query(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        try {
+            $request->validate([
+                "contract_id" => "required","query_year" => "required", "query_month" => "required"],
+                [
+                    "contract_id.required" => "انتخاب قرارداد الزامی می باشد",
+                    "query_year.required" => "انتخاب سال الزامی می باشد",
+                    "query_month.required" => "انتخاب ماه الزامی می باشد",
+                ]
+            );
+            $employees = EmployeePaySlip::BatchPayslip($request->input("contract_id"),$request->input("query_year"),$request->input("query_month"));
+            return redirect()->route("EmployeePaySlips.index")->with(["employees" => $employees,"query" => true]);
+        }
+        catch (Throwable $error){
+            return redirect()->back()->withErrors(["logical" => $error->getMessage()]);
+        }
+    }
     public function store(EmployeePaySlipRequest $request): \Illuminate\Http\RedirectResponse
     {
         Gate::authorize('create',"EmployeePaySlips");

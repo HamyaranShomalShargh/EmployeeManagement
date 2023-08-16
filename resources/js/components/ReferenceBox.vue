@@ -12,7 +12,7 @@
                         <input v-if="refs_needed.length > 1" id="org_ref" :checked="refs_needed[0] === 1" class="form-check-input vertical-middle" type="radio" value="organization" v-model="reference" name="reference" v-on:change="refresh">
                         <label for="org_ref" class="iransans form-check-label">سازمان و قرارداد</label>
                     </div>
-                    <tree-select @contract_selected="ContractSelected" :disabled="refs_needed.length > 1 && reference !== 'organization'" :id="'delete_employee_contract'" dir="rtl" :is_multiple="false" :selected="contract_id" :placeholder="'انتخاب کنید'" :database="$root.organizations"></tree-select>
+                    <tree-select :branch_node="true" @contract_selected="ContractSelected" :disabled="refs_needed.length > 1 && reference !== 'organization'" :id="'delete_employee_contract'" dir="rtl" :is_multiple="false" :selected="contract_id" :placeholder="'انتخاب کنید'" :database="$root.organizations"></tree-select>
                     <select v-if="refs_needed.includes(5)" class="form-control iransans mt-3 select-selectpicker" multiple :disabled="reference !== 'organization'" id="contract_employees" title="انتخاب فردی" data-size="30" data-live-search="true" v-on:change="EmployeeSelected">
                         <option v-for="employee in contract_employees" :value="employee.id">{{ employee.name }}</option>
                     </select>
@@ -72,6 +72,7 @@
 
 <script>
 import route from "ziggy-js";
+import alertify from "alertifyjs";
 
 export default {
     name: "ReferenceBox",
@@ -129,17 +130,29 @@ export default {
             this.$emit("reference_selected",{"type":this.reference,"target":id});
             const self = this;
             self.contract_employees = [];
-            this.$root.user_allowed_contracts.forEach((organization) => {
-                organization.contracts.forEach((contract) => {
-                    if (contract.id === parseInt(id)) {
-                        self.contract_employees = contract.employees;
-                        self.$forceUpdate();
-                        self.$nextTick(() => {
-                            $("#contract_employees").selectpicker('val','').selectpicker('refresh');
-                        });
+            self.show_loading = true;
+            axios.post(route("EmployeeFinancialAdvantages.get_employees"), {"contract_id":id}).then(function (response) {
+                self.show_loading = false;
+                if (response.data){
+                    switch (response.data.result){
+                        case "success":{
+                            self.contract_employees = response.data?.employees;
+                            self.$forceUpdate();
+                            self.$nextTick(() => {
+                                $("#contract_employees").selectpicker('val','').selectpicker('refresh');
+                            });
+                            break;
+                        }
+                        case "fail": {
+                            alertify.notify(response.data.message, 'error', "30");
+                            break;
+                        }
                     }
-                });
-            })
+                }
+            }).catch(function (error) {
+                self.show_loading = false;
+                alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
+            });
         },
         GroupSelected(e){
             this.$emit("reference_selected",{"type":this.reference,"target":parseInt(e.target.value)});

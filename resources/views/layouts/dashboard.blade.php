@@ -97,85 +97,80 @@
                 </ul>
             </div>
         </div>
-        <div class="content w-100 position-relative">
-            <div aria-live="polite" aria-atomic="true" class="position-relative">
-                <div class="toast-container position-fixed top-0 end-0 p-3">
-                    @if($errors->any())
-                        <div role="alert" id="fail_toast" aria-live="assertive" aria-atomic="true" class="toast text-bg-danger" data-bs-autohide="false">
-                            <div class="toast-header">
-                                <i class="far fa-times-circle fa-1-4x red-color me-2"></i>
-                                <span class="me-auto iransans fw-bolder" style="line-height: 20px;font-size: 12px">خطا در عملیات!</span>
-                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                            </div>
-                            <div class="toast-body">
-                                <ul class="mb-0">
-                                    @foreach($errors->all() as $error)
-                                        <li class="iransans mb-1">{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
+        <div class="content @if(Route::is(["superuser_idle","staff_idle"])) idle @endif w-100 position-relative">
+            @yield('main')
+        </div>
+        <div aria-live="polite" aria-atomic="true" class="position-relative">
+            <div class="toast-container position-fixed top-0 end-0 p-3">
+                @if($errors->any())
+                    <div role="alert" id="fail_toast" aria-live="assertive" aria-atomic="true" class="toast text-bg-danger" data-bs-autohide="false">
+                        <div class="toast-header">
+                            <i class="far fa-times-circle fa-1-4x red-color me-2"></i>
+                            <span class="me-auto iransans fw-bolder" style="line-height: 20px;font-size: 12px">خطا در عملیات!</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
-                    @endif
-                    @if(session()->has("result"))
-                        @switch(session("result"))
-                            @case("success")
-                                <div role="alert" id="success_toast" aria-live="assertive" aria-atomic="true" class="toast text-bg-success" data-bs-autohide="false">
-                                    <div class="toast-header">
-                                        <i class="far fa-check-circle fa-1-4x green-color me-2"></i>
-                                        <span class="me-auto iransans fw-bolder" style="line-height: 20px;font-size: 12px">عملیات موفق</span>
-                                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                                    </div>
-                                    @break
-                                    @case("warning")
-                                        <div role="alert" id="success_toast" aria-live="assertive" aria-atomic="true" class="toast text-bg-warning" data-bs-autohide="false">
-                                            <div class="toast-header">
-                                                <i class="far fa-triangle-exclamation fa-1-4x yellow-color me-2"></i>
-                                                <span class="me-auto iransans fw-bolder" style="line-height: 20px;font-size: 12px">توجه!</span>
-                                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                                            </div>
-                                            @break
-                                            @endswitch
-                                            <div class="toast-body">
-                                                <span class="iransans">
-                                                @switch(session("message"))
-                                                    @case("unknown")
-                                                        نتیجه عملیات نامشخص می باشد
-                                                        @break
-                                                    @case("saved")
-                                                        عملیات ذخیره سازی با موفقیت انجام شد
-                                                        @break
-                                                    @case("updated")
-                                                        عملیات ویرایش با موفقیت انجام شد
-                                                        @break
-                                                    @case("deleted")
-                                                        عملیات حذف با موفقیت انجام شد
-                                                        @break
-                                                    @case("relation_exists")
-                                                        به دلیل وجود رابطه با موجودیت های دیگر، امکان حذف این آیتم وجود ندارد
-                                                        @break
-                                                    @case("inactive")
-                                                        عملیات غیرفعال سازی با موفقیت انجام شد
-                                                        @break
-                                                    @case("active")
-                                                        عملیات فعال سازی با موفقیت انجام شد
-                                                        @break
-                                                    @case("registered")
-                                                        عملیات ثبت نام با موفقیت انجام شد
-                                                        @break
-                                                    @case("employee_data_reload")
-                                                        عملیات درخواست بازنشانی اطلاعات با موفقیت انجام شد
-                                                        @break
-                                                    @case("unregistered")
-                                                        عملیات لغو ثبت نام با موفقیت انجام شد
-                                                        @break
-                                                @endswitch
-                                                </span>
-                                            </div>
-                                        </div>
-                                        @endif
-                                </div>
-                </div>
-                @yield('main')
+                        <div class="toast-body py-4 px-3">
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                    <li class="iransans mb-1">{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
+                @if(session()->has("result"))
+                    <div role="alert" id="success_toast" aria-live="assertive" aria-atomic="true" class="toast @if(session("result") == "success") text-bg-success @elseif(session("result") == "warning") text-bg-warning @else text-bg-primary @endif"  data-bs-autohide="true">
+                        <div class="toast-header">
+                            @if(session("result") == "success")
+                                <i class="far fa-check-circle fa-1-4x green-color me-2"></i>
+                                <span class="me-auto iransans fw-bolder" style="line-height: 20px;font-size: 12px">عملیات موفق</span>
+                            @elseif(session("result") == "warning")
+                                <i class="far fa-triangle-exclamation fa-1-4x yellow-color me-2"></i>
+                                <span class="me-auto iransans fw-bolder" style="line-height: 20px;font-size: 12px">توجه!</span>
+                            @else
+                                <i class="far fa-question-circle fa-1-4x blue-color me-2"></i>
+                                <span class="me-auto iransans fw-bolder" style="line-height: 20px;font-size: 12px">عملیات نامشخص</span>
+                            @endif
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body py-4 px-3">
+                            <span class="iransans">
+                                @switch(session("message"))
+                                    @case("unknown")
+                                        نتیجه عملیات نامشخص می باشد
+                                        @break
+                                    @case("saved")
+                                        عملیات ذخیره سازی با موفقیت انجام شد
+                                        @break
+                                    @case("updated")
+                                        عملیات ویرایش با موفقیت انجام شد
+                                        @break
+                                    @case("deleted")
+                                        عملیات حذف با موفقیت انجام شد
+                                        @break
+                                    @case("relation_exists")
+                                        به دلیل وجود رابطه با موجودیت های دیگر، امکان حذف این آیتم وجود ندارد
+                                        @break
+                                    @case("inactive")
+                                        عملیات غیرفعال سازی با موفقیت انجام شد
+                                        @break
+                                    @case("active")
+                                        عملیات فعال سازی با موفقیت انجام شد
+                                        @break
+                                    @case("registered")
+                                        عملیات ثبت نام با موفقیت انجام شد
+                                        @break
+                                    @case("employee_data_reload")
+                                        عملیات درخواست بازنشانی اطلاعات با موفقیت انجام شد
+                                        @break
+                                    @case("unregistered")
+                                        عملیات لغو ثبت نام با موفقیت انجام شد
+                                        @break
+                                @endswitch
+                            </span>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
         <div class="modal fade rtl" id="print_modal" tabindex="-1" aria-labelledby="print_modal" aria-hidden="true">

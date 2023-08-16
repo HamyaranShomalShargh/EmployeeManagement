@@ -113,7 +113,7 @@ export default {
                                         case "success": {
                                             self.$root.$data.user_allowed_contracts = response.data?.contracts;
                                             self.$root.$data.user_allowed_groups = response.data?.groups;
-                                            self.$emit("update_table");
+                                            self.$root.$data.table_data_records = [];
                                             alertify.notify(response.data["message"], 'success', "5");
                                             break;
                                         }

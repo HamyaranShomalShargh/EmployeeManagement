@@ -1,5 +1,4 @@
-
-@extends($user::UserType() == "user" ? "user.user_dashboard" : abort(403))
+@extends("user.user_dashboard")
 @section('contents')
     <div class="modal fade rtl" id="new_ticket_modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="new_request_modal" aria-hidden="true">
         <div class="modal-dialog modal-fullscreen-md-down modal-dialog-centered" role="document">
