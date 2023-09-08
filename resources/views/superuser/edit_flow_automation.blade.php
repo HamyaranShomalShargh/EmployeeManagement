@@ -17,7 +17,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <form id="update_form" class="p-3" action="{{ route("AutomationFlow.update",$automation_flow->id) }}" data-json="roles_list" method="POST" v-on:submit="submit_form">
             @csrf
             @method('PUT')

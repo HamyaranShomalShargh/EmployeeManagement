@@ -19,7 +19,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div class="input-group mb-2">
             <button class="btn btn-outline-primary d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_automation_flow_modal">
                 <span class="iransans">چرخه جدید</span>

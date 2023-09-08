@@ -134,5 +134,8 @@
         <div class="content-page bg-white w-100">
             @yield('content')
         </div>
+        <div class="content-footer position-fixed">
+            @yield('footer')
+        </div>
     @endif
 @endsection

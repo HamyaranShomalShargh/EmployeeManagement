@@ -7,17 +7,23 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-            <i v-if="sidebar_toggle" class="sidebar-toggle fa fa-bars fa-1-6x me-4" v-cloak
-               v-on:click="toggle_sidebar('open')"></i>
-            <h5 class="iransans d-inline-block m-0 d-flex align-items-center">
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
                 گروه سفارشی
-                <span class="vertical-middle ms-2">(ویرایش)</span>
+                <span class="vertical-middle ms-1 text-muted">ویرایش</span>
             </h5>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-light">
+                <i class="fa fa-circle-question fa-1-4x green-color"></i>
+            </button>
+            <a role="button" class="btn btn-sm btn-outline-light" href={{route("staff_idle")}}>
+                <i class="fa fa-times fa-1-4x gray-color"></i>
+            </a>
         </div>
     </div>
 @endsection
 @section('content')
-    <div class="page-content p-3">
+    <div class="page-content edit w-100">
         <form id="main_submit_form" class="p-3" action="{{ route("CustomGroups.update",$group->id) }}" data-json="employees" method="POST" v-on:submit="submit_form">
             @csrf
             @method('PUT')
@@ -106,18 +112,20 @@
                     <span class="invalid-feedback iransans small_font" role="alert">{{ $message }}</span>
                     @enderror
                 </div>
-                <div class="col-12 mb-3 form-button-row text-center pt-4 pb-2">
-                    <button type="submit" form="main_submit_form" class="btn btn-success submit_button">
-                        <i class="submit_button_icon fa fa-check fa-1-2x me-1"></i>
-                        <span class="iransans">ارسال و ویرایش</span>
-                    </button>
-                    <a role="button" href="{{ route("CustomGroups.index") }}" class="btn btn-outline-secondary iransans">
-                        <i class="fa fa-arrow-turn-right fa-1-2x me-1"></i>
-                        <span class="iransans">بازگشت به لیست</span>
-                    </a>
-                </div>
             </div>
         </form>
+    </div>
+@endsection
+@section("footer")
+    <div class="content-footer-container d-flex align-items-center justify-content-center gap-3 flex-wrap">
+        <button type="submit" form="main_submit_form" class="btn btn-success submit_button">
+            <i class="submit_button_icon fa fa-check fa-1-2x me-1"></i>
+            <span class="iransans">ارسال و ویرایش</span>
+        </button>
+        <a role="button" href="{{ route("CustomGroups.index") }}" class="btn btn-outline-secondary iransans">
+            <i class="fa fa-arrow-turn-right fa-1-2x me-1"></i>
+            <span class="iransans">بازگشت به لیست</span>
+        </a>
     </div>
 @endsection
 @section('modals')

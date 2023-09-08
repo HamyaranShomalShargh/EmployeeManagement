@@ -157,7 +157,7 @@ class EmployeePaySlipController extends Controller
         }
     }
 
-    public function show($id)
+    public function show($id): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
     {
         try {
             $payslip = EmployeePaySlip::query()->with("employee.contract.organization")->findOrFail($id);

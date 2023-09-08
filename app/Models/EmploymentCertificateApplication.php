@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmploymentCertificateApplication extends Model
 {
+    public $timestamps = false;
     use HasFactory;use softDeletes;
     protected $table = "employment_certificate_applications";
-    protected $fillable = ["user_id","employee_id","recipient","is_accepted","is_refused","inactive","i_number","data"];
+    protected $fillable = ["created_at","updated_at","user_id","employee_id","recipient","is_accepted","is_refused","inactive","i_number","data"];
     protected $appends = ["data_array"];
 
     public function form(): MorphOne

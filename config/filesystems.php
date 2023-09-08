@@ -141,6 +141,20 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
+        'backup_flag' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/backup_flag'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+        'system_backups' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/system_backups'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
     ],
 
     /*

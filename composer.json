@@ -32,6 +32,7 @@
         "psr/log": "v2.*",
         "psr/simple-cache": "2.0",
         "pusher/pusher-php-server": "7.0.2",
+        "spatie/laravel-backup": "^8.2",
         "tightenco/ziggy": "^1.5",
         "webklex/laravel-pdfmerger": "^1.3"
     },

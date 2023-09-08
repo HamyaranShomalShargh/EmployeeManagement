@@ -28,6 +28,7 @@ use App\Http\Controllers\Staff\StaffUserController;
 use App\Http\Controllers\Staff\TicketController;
 use App\Http\Controllers\Staff\UnregisteredEmployeeController;
 use App\Http\Controllers\SuperUser\AutomationFlowController;
+use App\Http\Controllers\SuperUser\BackupController;
 use App\Http\Controllers\SuperUser\EmployeeRequestsController;
 use App\Http\Controllers\SuperUser\MenuActionController;
 use App\Http\Controllers\SuperUser\MenuHeaderController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\SuperUser\MenuItemController;
 use App\Http\Controllers\SuperUser\SuperUserRoleController;
 use App\Http\Controllers\SuperUser\SuperUserUserController;
 use App\Http\Controllers\SuperUser\SystemInformationController;
+use App\Http\Controllers\SuperUser\SystemOperationController;
 use App\Http\Controllers\User\ApplicationFormController;
 use App\Http\Controllers\User\RefreshDataController;
 use App\Http\Controllers\User\UserPaySlipController;
@@ -43,6 +45,7 @@ use App\Http\Controllers\User\UserTicketController;
 use App\Http\Controllers\ValidationController;
 use App\Imports\ImportContractDateExcel;
 use App\Imports\NewContractEmployee;
+use App\Models\ApplicationForm;
 use App\Models\Automation;
 use App\Models\CompanyInformation;
 use App\Models\Contract;
@@ -51,12 +54,14 @@ use App\Models\Employee;
 use App\Models\EmployeeDataRequest;
 use App\Models\EmployeePaySlip;
 use App\Models\Organization;
+use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\UnregisteredEmployee;
 use App\Models\User;
 use Hekmatinasser\Verta\Verta;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Mews\Captcha\Facades\Captcha;
 use \App\Http\Controllers\Staff\AxiosController;
 use App\Http\Controllers\User\RegisterUserController;
@@ -141,7 +146,276 @@ Route::group(['prefix'=>'Dashboard', 'middleware'=>['auth']],function() {
         Route::resource("/AutomationFlow",AutomationFlowController::class);
         Route::post("/AutomationFlow/Activation/{id}",[AutomationFlowController::class,"status"])->name("AutomationFlow.activation");
         Route::resource("/EmployeeRequests",EmployeeRequestsController::class);
+        Route::group(['prefix'=>'SystemOperations'],function () {
+            Route::get("/",[SystemOperationController::class,"index"])->name("SystemOperations.index");
+            Route::post("/Optimization",[SystemOperationController::class,"optimize"])->name("System.optimize");
+        });
+        Route::group(['prefix'=>'Backup'],function () {
+            Route::get("/",[BackupController::class,"index"])->name("Backup.index");
+            Route::post("/backup",[BackupController::class,"backup"])->name("Backup.backup");
+            Route::post("/stream",[BackupController::class,"stream"])->name("Backup.stream");
+            Route::get("/download/{path}",[BackupController::class,"backup_download"])->name("Backup.download");
+            Route::delete("/destroy/{id}",[BackupController::class,"destroy"])->name("Backup.destroy");
+        });
+        Route::get("/RestoreEmployees",function (){
+            $contacts = Contract::all();
+            foreach ($contacts as $contact){
+                if ($contact->is_parent == 0) {
+                    $id = $contact->id;
+                    $import = new NewContractEmployee($contact->id);
+                    $import->import(storage_path("app/public/exl/$id.xlsx"));
+                }
+            }
+        });
+        Route::get("/RestoreRequests",function (){
+            $old_data = \Illuminate\Support\Facades\DB::table("agebk")->select("*")->get();
+            $employees = Employee::query()->with(["contract.organization"])->get();
+            foreach ($employees as $employee) {
+                $employee_data = $old_data->where("cm", "=", $employee->national_code);
+                $data = [
+                    "active_contract" => [
+                        "organization_id" => $employee->contract->organization->id,
+                        "organization_name" => $employee->contract->organization->name,
+                        "contract_id" => $employee->contract->id,
+                        "contract_name" => $employee->contract->name
+                    ],
+                    "payslip" => EmployeePaySlip::Last($employee->id),
+                    "active_salary_details" => $employee->active_salary_details(),
+                    "active_contract_date" => $employee->active_contract_date()
+                ];
+                foreach ($employee_data as $datum){
+                    $kind = '';
+                    $kind_name = '';
+                    $recipient = $datum->toorg;
+                    $date_created = date($datum->sdate." 08:00:00");
+                    if ($datum->dof && $datum->doe)
+                        $data["active_contract_date"] = ["start" => Verta::jalaliToGregorian(explode("/",$datum->dof)[0],explode("/",$datum->dof)[1],explode("/",$datum->dof)[2]),
+                        "end" => Verta::jalaliToGregorian(explode("/",$datum->doe)[0],explode("/",$datum->doe)[1],explode("/",$datum->doe)[2])];
+                    switch ($datum->kind) {
+                        case "1":{
+                            $kind_name = "EmploymentCertificateApplication";
+                            $pre_number = implode(Str::matchAll("/[A-Z]+/",$kind_name)->toArray()).$datum->cnum;
+                            $kind=\App\Models\EmploymentCertificateApplication::query()->create([
+                                "user_id" => Auth::id(),
+                                "employee_id" => $employee->id,
+                                "recipient" => $recipient,
+                                "is_accepted" => 1,
+                                "is_refused" => 0,
+                                "inactive" => 0,
+                                "i_number" => $pre_number,
+                                "data" => json_encode($data,JSON_UNESCAPED_UNICODE),
+                                "created_at" => $date_created,
+                                "updated_at" => $date_created
+                            ]);
+                            break;
+                        }
+                        case "4":
+                        case "2":{
+                            $kind_name = "LoanPaymentConfirmationApplication";
+                            $pre_number = implode(Str::matchAll("/[A-Z]+/",$kind_name)->toArray()).$datum->cnum;
+                            $kind=\App\Models\LoanPaymentConfirmationApplication::query()->create([
+                                "user_id" => Auth::id(),
+                                "employee_id" => $employee->id,
+                                "recipient" => $recipient,
+                                "borrower" => $datum->vamg,
+                                "loan_amount" => $datum->vam,
+                                "is_accepted" => 1,
+                                "is_refused" => 0,
+                                "inactive" => 0,
+                                "i_number" => $pre_number,
+                                "data" => json_encode($data,JSON_UNESCAPED_UNICODE),
+                                "created_at" => $date_created,
+                                "updated_at" => $date_created
+                            ]);
+                            break;
+                        }
+                        case "3":{
+                            $kind_name = "PersonnelAppointmentForm";
+                            $pre_number = implode(Str::matchAll("/[A-Z]+/",$kind_name)->toArray()).$datum->cnum;
+                            $kind=\App\Models\PersonnelAppointmentForm::query()->create([
+                                "user_id" => Auth::id(),
+                                "employee_id" => $employee->id,
+                                "is_accepted" => 1,
+                                "is_refused" => 0,
+                                "inactive" => 0,
+                                "i_number" => $pre_number,
+                                "data" => json_encode($data,JSON_UNESCAPED_UNICODE),
+                                "created_at" => $date_created,
+                                "updated_at" => $date_created
+                            ]);
+                            break;
+                        }
+                        case "5":{
+                            $kind_name = "OccupationalMedicineApplication";
+                            $pre_number = implode(Str::matchAll("/[A-Z]+/",$kind_name)->toArray()).$datum->cnum;
+                            $kind=\App\Models\OccupationalMedicineApplication::query()->create([
+                                "user_id" => Auth::id(),
+                                "employee_id" => $employee->id,
+                                "is_accepted" => 1,
+                                "is_refused" => 0,
+                                "inactive" => 0,
+                                "i_number" => $pre_number,
+                                "data" => json_encode($data,JSON_UNESCAPED_UNICODE),
+                                "created_at" => $date_created,
+                                "updated_at" => $date_created
+                            ]);
+                            break;
+                        }
+                        case "6":{
+                            $kind_name = "BackgroundCheckApplication";
+                            $pre_number = implode(Str::matchAll("/[A-Z]+/",$kind_name)->toArray()).$datum->cnum;
+                            $kind=\App\Models\BackgroundCheckApplication::query()->create([
+                                "user_id" => Auth::id(),
+                                "employee_id" => $employee->id,
+                                "is_accepted" => 1,
+                                "is_refused" => 0,
+                                "inactive" => 0,
+                                "i_number" => $pre_number,
+                                "data" => json_encode($data,JSON_UNESCAPED_UNICODE),
+                                "created_at" => $date_created,
+                                "updated_at" => $date_created
+                            ]);
+                            break;
+                        }
+                        case "7":{
+                            $kind_name = "SettlementFormApplication";
+                            $pre_number = implode(Str::matchAll("/[A-Z]+/",$kind_name)->toArray()).$datum->cnum;
+                            $kind=\App\Models\SettlementFormApplication::query()->create([
+                                "user_id" => Auth::id(),
+                                "employee_id" => $employee->id,
+                                "is_accepted" => 1,
+                                "is_refused" => 0,
+                                "inactive" => 0,
+                                "i_number" => $pre_number,
+                                "data" => json_encode($data,JSON_UNESCAPED_UNICODE),
+                                "created_at" => $date_created,
+                                "updated_at" => $date_created
+                            ]);
+                            break;
+                        }
+                    }
+                    $flow = ApplicationForm::MakeAutomation($kind_name);
+                    $automation = $kind->automation()->create([
+                        "user_id" => Auth::id(),
+                        "employee_id" => $employee->id,
+                        "contract_id" => $employee->contract_id,
+                        "current_role_id" => 1,
+                        "flow" => $flow["details"],
+                        "is_read" => 1,
+                        "is_finished" => 1,
+                        "editable" => 0,
+                        "current_priority" => 0,
+                        "message" => null,
+                        "created_at" => $date_created,
+                        "updated_at" => $date_created,
+                    ]);
+                    if ($datum->cuser == "چاپ سفارشی"){
+                        $user = User::query()->findOrFail(16);
+                        $automation->signs()->create([
+                            "user_id" => $user->id,
+                            "sign" => "",
+                            "created_at" => $date_created,
+                            "updated_at" => $date_created,
+                        ]);
+                    }
+                    else {
+                        $ceo =  trim($datum->ceoname) ?: trim(explode("@", $datum->cuser)[0]);
+                        $expert = trim($datum->expertname) ?: $ceo;
+                        $manager = trim($datum->managername) ?: $datum->expertname;
+                        $expert_user = User::query()->where("name", "like", "%" . $expert . "%")->first();
+                        $manager_user = User::query()->where("name", "like", "%" . $manager . "%")->first();
+                        $ceo_user = User::query()->where("name", "like", "%" . $ceo . "%")->first();
+                        if ($ceo_user == null)
+                            dd("c ",$datum->id);
+                        if ($expert_user == null)
+                            dd("e ".$datum->id);
+                        if ($manager_user == null)
+                            dd("m ".$datum->id);
+                        $automation->signs()->create([
+                            "user_id" => $expert_user->id,
+                            "sign" => "",
+                            "created_at" => $date_created,
+                            "updated_at" => $date_created,
+                        ]);
+                        $automation->signs()->create([
+                            "user_id" => $manager_user->id,
+                            "sign" => "",
+                            "created_at" => $date_created,
+                            "updated_at" => $date_created,
+                        ]);
+                        $automation->signs()->create([
+                            "user_id" => $ceo_user->id,
+                            "sign" => "",
+                            "created_at" => $date_created,
+                            "updated_at" => $date_created,
+                        ]);
+                    }
+                }
+            }
 
+        });
+        Route::get("/RestoreNews",function (){
+            $news = \App\Models\DomesticNews::query()->with("image")->get();
+            $allFiles = \Illuminate\Support\Facades\File::allFiles(storage_path("app/public/image_gallery"));
+            foreach ($news as $article) {
+                $files = $article->image;
+                $main = $article->image->where("role","=",1)->first();
+                $added = \App\Models\News::query()->create([
+                    "user_id" => 1,
+                    "title" => $article->title,
+                    "topic" => $article->title,
+                    "brief" => $article->short_desc,
+                    "description" => $article->description,
+                    "views" => $article->view,
+                    "published" => 1,
+                    "image" => $main->image_file_name,
+                    "created_at" => date("Y-m-d H:i:s",strtotime($article->created_at)),
+                    "updated_at" => date("Y-m-d H:i:s",strtotime($article->created_at))
+                ]);
+                \Illuminate\Support\Facades\Storage::disk("news")->makeDirectory($added->id);
+                foreach ($files as $file){
+                    foreach ($allFiles as $allFile){
+                        if ($allFile->getFilename() == $file->image_file_name)
+                            \Illuminate\Support\Facades\File::copy($allFile,\Illuminate\Support\Facades\Storage::disk("news")->path($added->id."/".$allFile->getFilename()));
+                    }
+                }
+            }
+        });
+        Route::get("/RestoreBanks",function (){
+            $banks = [
+                "بانک ملّی ایران",
+                "بانک اقتصاد نوین",
+                "بانک قرض‌الحسنه مهر ایران",
+                "بانک سپه",
+                "بانک پارسیان",
+                "بانک قرض‌الحسنه رسالت",
+                "بانک صنعت و معدن",
+                "بانک کارآفرین",
+                "بانک کشاورزی",
+                "بانک سامان",
+                "بانک مسکن",
+                "بانک سینا",
+                "بانک توسعه صادرات ایران",
+                "بانک خاور میانه",
+                "بانک توسعه تعاون",
+                "بانک شهر",
+                "پست بانک ایران",
+                "بانک دی",
+                "بانک صادرات",
+                "بانک ملت",
+                "بانک تجارت",
+                "بانک رفاه",
+                "بانک آینده",
+                "بانک گردشگری",
+                "بانک ایران زمین",
+                "بانک قوامین(وابسته به بانک سپه",
+                "بانک انصار(وابسته به بانک سپه)",
+                "بانک سرمایه",
+                "بانک پاسارگاد"
+            ];
+            foreach ($banks as $bank)
+                \App\Models\Bank::query()->create(["name" => $bank]);
+        });
     });
     Route::group(['prefix'=>'Staff', 'middleware'=>['staff_permission']],function(){
         Route::get("/",[DashboardController::class,"staff"])->name("staff_idle");
@@ -203,6 +477,7 @@ Route::group(['prefix'=>'Dashboard', 'middleware'=>['auth']],function() {
                 Route::post("/DateExtension", [EmployeeManagementController::class, "employee_date_extension"])->name("EmployeesManagement.item_date_extension");
                 Route::post("/ContractConversion", [EmployeeManagementController::class, "employee_contract_conversion"])->name("EmployeesManagement.item_contract_conversion");
                 Route::post("/RequestsHistory", [EmployeeManagementController::class, "requests_history"])->name("EmployeesManagement.requests_history");
+                Route::get("/RequestsPreview/{id}", [EmployeeManagementController::class, "request_preview"])->name("EmployeesManagement.request_preview");
                 Route::post("/History", [EmployeeManagementController::class, "history"])->name("EmployeesManagement.history");
                 Route::post("/BatchApplication", [EmployeeManagementController::class, "employee_batch_application"])->name("EmployeesManagement.item_batch_application");
                 Route::post("/ExcelList", [EmployeeManagementController::class, "employee_excel_list"])->name("EmployeesManagement.item_excel_list");
@@ -371,86 +646,4 @@ Route::group(['prefix'=>'Validation'],function() {
     Route::get("direct/{i_number}",[ValidationController::class,"direct"])->name("Validation.direct");
     Route::get("index",[ValidationController::class,"index"])->name("Validation.index");
     Route::post("check",[ValidationController::class,"check"])->name("Validation.check");
-});
-//Route::get("/c",function (){
-//    $rr = [
-//        "بانک ملّی ایران",
-//        "بانک اقتصاد نوین",
-//        "بانک قرض‌الحسنه مهر ایران",
-//        "بانک سپه",
-//        "بانک پارسیان",
-//        "بانک قرض‌الحسنه رسالت",
-//        "بانک صنعت و معدن",
-//        "بانک کارآفرین",
-//        "بانک کشاورزی",
-//        "بانک سامان",
-//        "بانک مسکن",
-//        "بانک سینا",
-//        "بانک توسعه صادرات ایران",
-//        "بانک خاور میانه",
-//        "بانک توسعه تعاون",
-//        "بانک شهر",
-//        "پست بانک ایران",
-//        "بانک دی",
-//        "بانک صادرات",
-//        "بانک ملت",
-//        "بانک تجارت",
-//        "بانک رفاه",
-//        "بانک آینده",
-//        "بانک گردشگری",
-//        "بانک ایران زمین",
-//        "بانک قوامین(وابسته به بانک سپه",
-//        "بانک انصار(وابسته به بانک سپه)",
-//        "بانک سرمایه",
-//        "بانک پاسارگاد"
-//    ];
-//    foreach ($rr as $e)
-//        \App\Models\Bank::query()->create(["name" => $e]);
-//});
-//Route::get("/b",function (){
-//    $news = \App\Models\DomesticNews::query()->with("image")->get();
-//    $allFiles = \Illuminate\Support\Facades\File::allFiles(storage_path("app/public/image_gallery"));
-//    foreach ($news as $article) {
-//        $files = $article->image;
-//        $main = $article->image->where("role","=",1)->first();
-//        $added = \App\Models\News::query()->create([
-//            "user_id" => 1,
-//            "title" => $article->title,
-//            "topic" => $article->title,
-//            "brief" => $article->short_desc,
-//            "description" => $article->description,
-//            "views" => $article->view,
-//            "published" => 1,
-//            "image" => $main->image_file_name,
-//            "created_at" => date("Y-m-d H:i:s",strtotime($article->created_at)),
-//            "updated_at" => date("Y-m-d H:i:s",strtotime($article->created_at))
-//        ]);
-//        \Illuminate\Support\Facades\Storage::disk("news")->makeDirectory($added->id);
-//        foreach ($files as $file){
-//            foreach ($allFiles as $allFile){
-//                if ($allFile->getFilename() == $file->image_file_name)
-//                    \Illuminate\Support\Facades\File::copy($allFile,\Illuminate\Support\Facades\Storage::disk("news")->path($added->id."/".$allFile->getFilename()));
-//            }
-//        }
-//    }
-//});
-//
-//Route::get("/v",function (){
-//    $contacts = Contract::all();
-//    foreach ($contacts as $contact){
-//        if ($contact->is_parent == 0) {
-//            $id = $contact->id;
-//            $import = new NewContractEmployee($contact->id);
-//            $import->import(storage_path("app/public/exl/$id.xlsx"));
-//        }
-//    }
-//});
-Route::get("/bv",function (){
-    $employee = Employee::query()->with(["contract_extensions.user","contract_conversions.contract","contract_conversions.user"])->findOrFail(1)->toArray();
-    $response["result"] = "success";
-    $response["history"] = ["extensions" => $employee["contract_extensions"], "conversions" => $employee["contract_conversions"]];
-    dd($response);
-});
-Route::get("/optimize" ,function (){
-    \Illuminate\Support\Facades\Artisan::call("optimize:clear");
 });

@@ -142,6 +142,10 @@
             </div>
         </div>
         <div class="modal-footer bg-menu">
+            <button v-if="details !== null" class="btn btn-outline-dark iransans" data-bs-toggle="modal" data-bs-target="#pdf_viewer_modal" v-on:click="PDFPreview">
+                <i class="fa fa-print-search fa-1-2x me-1"></i>
+                پیش نمایش
+            </button>
             <button v-if="details !== null" class="btn btn-secondary iransans" v-on:click="details = null">
                 <i class="fa fa-arrow-alt-from-right fa-1-2x me-1"></i>
                 بازگشت به لیست
@@ -167,7 +171,8 @@ export default {
             reference: null,
             data: null,
             automations: [],
-            details: null
+            details: null,
+            automation_id: null
         }
     },
     computed: {
@@ -239,6 +244,7 @@ export default {
             this.details = self.automations.find(automation => {
                 return automation.id === parseInt(id);
             });
+            this.automation_id = parseInt(id);
         },
         SearchTable(e){
             let filter = e.target.value;
@@ -266,6 +272,10 @@ export default {
                         tr[i].style.display = "none";
                 }
             }
+        },
+        PDFPreview(){
+            const self = this;
+            $('#pdf_viewer').attr('src',route("EmployeesManagement.request_preview",[self.automation_id]));
         }
     }
 }

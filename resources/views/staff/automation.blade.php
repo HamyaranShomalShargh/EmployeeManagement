@@ -8,10 +8,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-            <h4 class="iransans d-inline-block m-0 fw-bolder">
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
                 اتوماسیون درخواست های پرسنل
                 <span class="vertical-middle ms-1 text-muted">مشاهده ، تایید ، عدم تایید</span>
-            </h4>
+            </h5>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -24,17 +24,14 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div class="input-group mb-2">
-            <button class="btn btn-outline-dark d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_labour_law_modal">
-                <i class="far fa-filter-list fa-1-6x me-1"></i>
-            </button>
             <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام، کد ملی، سازمان، قرارداد و نوع درخواست" data-table="requests_table" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table id="requests_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2,3,4,5,6]">
+                <table id="requests_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2,3,4,5]">
                     <thead class="bg-light black-color">
                     <tr class="iransans">
                         <th scope="col" style="width: 70px" data-sortas="numeric"><span>شماره</span></th>
@@ -48,7 +45,7 @@
                         <th scope="col" style="width: 100px"><span>تاریخ ویرایش</span></th>
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody v-cloak v-if="employee_requests.length > 0">
                     <tr class="iransans pointer-cursor" :class="request.is_read === 0 ? 'unread' : null" v-for="(request,index) in employee_requests" data-bs-toggle="modal" data-bs-target="#request_details_modal" v-on:click="GetRequestDetails(request.id)">
                         <td>@{{ request.id }}</td>
                         <td><span>@{{ request.employee.name }}</span></td>
@@ -61,6 +58,9 @@
                         <td><span>@{{ PersianDateString(request.updated_at) }}</span></td>
                     </tr>
                     </tbody>
+                    <tbody v-cloak v-else>
+                    <tr><td colspan="9"><span class="iransans">اطلاعاتی وجود ندارد</span></td></tr>
+                    </tbody>
                     <tfoot class="bg-dark">
                     <tr>
                         <td colspan="12">
@@ -68,13 +68,6 @@
                                 <p class="iransans white-color mb-0">
                                     مجموع :
                                     @{{ employee_requests.length }}
-                                </p>
-                                <p class="iransans white-color mb-0">
-                                    کسر از حقوق :
-                                    @{{ GetRequestKindCount("App\Models\LoanPaymentConfirmationApplication") }}
-                                </p>
-                                <p class="iransans white-color mb-0">
-
                                 </p>
                             </div>
                         </td>
@@ -128,7 +121,7 @@
                                     </label>
                                     <input :disabled="request.application_class !== 'LPCA' && request.application_class !== 'ECA'" class="form-control text-center iransans" v-model="data_recipient" name="recipient" type="text">
                                 </div>
-                                <div v-if="request.application_class === 'LPCA'" class="form-control text-center iransans col-12 mb-3">
+                                <div v-if="request.application_class === 'LPCA'" class="col-12 mb-3">
                                     <label class="form-label iransans">
                                         نام وام گیرنده (جهت ضمانت)
                                     </label>
@@ -330,7 +323,7 @@
                             </div>
                             <div class="text-center" v-else>
                                 <div class="alert alert-danger iransans" role="alert">
-                                    اطلاعاتی وجود ندارد!
+                                    اطلاعاتی وجود ندارد
                                 </div>
                             </div>
                         </div>
@@ -420,19 +413,19 @@
                 </div>
                 <div class="modal-footer bg-menu">
                     <button type="button" class="btn btn-outline-primary iransans" v-on:click="RefreshRequestData">
-                        <i class="fa fa-refresh fa-1-2x me-1"></i>
+                        <i class="fa fa-refresh fa-1-2x vertical-middle me-1"></i>
                         <span class="iransans">بروزرسانی اطلاعات ضمیمه</span>
                     </button>
                     <button type="button" class="btn btn-success" v-on:click="ConfirmRequest">
-                        <i class="fa fa-check fa-1-2x me-1"></i>
+                        <i class="fa fa-check fa-1-2x me-1 vertical-middle"></i>
                         <span class="iransans">تایید درخواست و ادامه</span>
                     </button>
                     <button type="button" class="btn btn-danger" v-on:click="RejectRequest">
-                        <i class="fa fa-times fa-1-2x me-1"></i>
+                        <i class="fa fa-times fa-1-2x me-1 vertical-middle"></i>
                         <span class="iransans">عدم تایید درخواست و ارجاع</span>
                     </button>
                     <button id="close_modal" type="button" class="btn btn-outline-secondary iransans" data-bs-dismiss="modal" v-on:click="ResetRequestModal">
-                        <i class="fa fa-times fa-1-2x me-1"></i>
+                        <i class="fa fa-times fa-1-2x me-1 vertical-middle"></i>
                         <span class="iransans">انصراف</span>
                     </button>
                 </div>

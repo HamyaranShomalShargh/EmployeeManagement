@@ -20,7 +20,6 @@ import fancyTable from 'jquery.fancytable';
 window.fancyTable = fancyTable;
 import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import Chart from 'chart.js/auto';
-import {alert} from "../../public_html/js/app";
 let locale = {
     OK: 'قبول',
     CONFIRM: 'تایید',
@@ -186,7 +185,9 @@ const app = new Vue({
         UserPayslip: [],
         UserPayslipDetails: [],
         EmployeesFound: [],
-        RegistrationFound: []
+        RegistrationFound: [],
+        BackupType: "Database",
+        Backups: typeof backup_data !== "undefined" ? backup_data : [],
     },
     computed: {
         MainExcelColumns(){
@@ -242,10 +243,21 @@ const app = new Vue({
     },
     created() {
         const self = this;
+        function BackupStream(){
+            axios.post(route("Backup.stream")).then(function (response) {
+                self.Backups = response?.data;
+            }).catch(function (error) {
+                alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
+            });
+        }
+        if (typeof is_backup !== "undefined") {
+            console.log("ok");
+            setInterval(BackupStream, 4000);
+        }
         if($(window).innerWidth() <= 900) {
             self.sidebar_toggle = true;
             self.desktop_sidebar_toggle = false;
-            $(".information-box,.content-header,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").removeClass("small-sidebar");
+            $(".information-box,.content-header,.content-footer,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").removeClass("small-sidebar");
         }
         else {
             self.desktop_sidebar_toggle = true;
@@ -413,7 +425,6 @@ const app = new Vue({
                         });
                     }
                 }).catch(function (error) {
-                console.error(error.response.data);
                 alertify.notify("عدم توانایی در انجام عملیات پلاگین" + `(${error})`, 'error', "30");
             });
         }
@@ -446,10 +457,9 @@ const app = new Vue({
             toast.show();
         }
         if (this.is_static_sidebar === 0 && this.sidebar_toggle === false)
-            $(".information-box,.content-header,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").addClass("small-sidebar");
+            $(".information-box,.content-header,.content-footer,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").addClass("small-sidebar");
         const self = this;
         $(document).ready(function (){
-            console.log(self);
             String.prototype.toEnglishDigits = function() {
                 return this.replace(/[۰-۹]/g, (chr) => {
                     let persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -610,14 +620,15 @@ const app = new Vue({
             }
         });
         window.addEventListener("resize",function (){
-            let table = document.getElementsByClassName('table-scroll');
-            $(table).css("max-height",`calc(100vh - ${document.getElementById("table-scroll-container").offsetTop}px - 15px)`);
-            console.log(document.getElementById("table-scroll-container").offsetTop);
+            if ($(".table-scroll").length) {
+                let table = document.getElementsByClassName('table-scroll');
+                $(table).css("max-height", `calc(100vh - ${document.getElementById("table-scroll-container").offsetTop}px - 15px)`);
+            }
             const self = this;
             if($(window).innerWidth() <= 900) {
                 self.sidebar_toggle = true;
                 self.desktop_sidebar_toggle = false;
-                $(".information-box,.content-header,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").removeClass("small-sidebar");
+                $(".information-box,.content-header,.content-footer,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").removeClass("small-sidebar");
             }
             else {
                 self.desktop_sidebar_toggle = true;
@@ -626,6 +637,11 @@ const app = new Vue({
         });
     },
     watch:{
+        'Backups': {
+            handler: function () {
+                setInterval(this.BackupStream,4000);
+            }
+        }
     },
     methods:{
         ContractSelected(id){
@@ -819,37 +835,27 @@ const app = new Vue({
                 document.onmousemove = null;
             }
         },
-        toggle_sidebar(opt){
-            if (window.innerWidth <= 900){
-                switch (opt){
-                    case "open":{
-                        $(".sidebar").css({"width":"70vw","position":"fixed","right":"0","top":"0","bottom":"0","padding":"16px","overflow":"auto"});
-                        break;
-                    }
-                    case "close":{
-                        $(".sidebar").css({"width":"0","position":"fixed","right":"0","top":"0","bottom":"0","padding":"0","overflow":"hidden"});
-                        break;
-                    }
-                }
-            }
+        toggle_sidebar(){
+            if (window.innerWidth <= 900)
+               $(".sidebar").toggleClass("open");
         },
         desktop_toggle_sidebar(opt){
             if (window.innerWidth > 900){
                 switch (opt){
                     case "minimize":{
                         this.is_static_sidebar = 0;
-                        $(".information-box,.content-header,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").addClass("small-sidebar");
+                        $(".information-box,.content-header,.content-footer,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").addClass("small-sidebar");
                         $(".dashboard-logo").css("display","inline");
                         break;
                     }
                     case "maximize-hover":{
-                        $(".information-box,.content-header,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").removeClass("small-sidebar");
+                        $(".information-box,.content-header,.content-footer,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").removeClass("small-sidebar");
                         $(".dashboard-logo").css("display","none");
                         break;
                     }
                     case "minimize-static":{
                         if (!this.is_static_sidebar) {
-                            $(".information-box,.content-header,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").addClass("small-sidebar");
+                            $(".information-box,.content-header,.content-footer,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").addClass("small-sidebar");
                             $(".dashboard-logo").css("display","inline");
                         }
 
@@ -857,7 +863,7 @@ const app = new Vue({
                     }
                     case "maximize-static":{
                         this.is_static_sidebar = 1;
-                        $(".information-box,.content-header,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").removeClass("small-sidebar");
+                        $(".information-box,.content-header,.content-footer,.menu-header-icon.small-sidebar-icon,.sidebar-menu .nav-item,.company_name,.account-name,.small-sidebar-button,.sidebar,.dashboard-logo").removeClass("small-sidebar");
                         $(".dashboard-logo").css("display","inline");
                         break;
                     }
@@ -1218,9 +1224,6 @@ const app = new Vue({
                                 }).catch(function (error) {
                                 self.$root.$data.show_loading = false;
                                 alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
-                                // console.error(error.response.data);    // ***
-                                // console.error(error.response.status);  // ***
-                                // console.error(error.response.headers); // ***
                             });
                         }
                     }
@@ -1284,9 +1287,6 @@ const app = new Vue({
                                 }).catch(function (error) {
                                 self.$root.$data.show_loading = false;
                                 alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
-                                // console.error(error.response.data);    // ***
-                                // console.error(error.response.status);  // ***
-                                // console.error(error.response.headers); // ***
                             });
                         }
                     }
@@ -1487,7 +1487,7 @@ const app = new Vue({
                                 pagination: false,
                                 perPage:0,
                                 globalSearch:false,
-                                searchable: false
+                                searchable: false,
                             });
                             $(".contract_date").pDatepicker({
                                 initialValue: false,
@@ -1561,7 +1561,6 @@ const app = new Vue({
                             .then(function (response) {
                                 self.show_loading = false;
                                 if (response.data) {
-                                    console.log(response.data);
                                     switch (response.data["result"]) {
                                         case "success": {
                                             self.employee_requests = response.data?.automations;
@@ -1933,6 +1932,31 @@ const app = new Vue({
                 axios.post(route("UserPaySlips.published"), {"payslip_id": payslip_id}).then(function (response) {
                     self.show_loading = false;
                     self.UserPayslipDetails = response.data?.published;
+                }).catch(function (error) {
+                    self.show_loading = false;
+                    alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");
+                });
+            }
+        },
+        BackupInformation(){
+            const self = this;
+            if (self.name && self.BackupType) {
+                self.show_loading = true;
+                axios.post(route("Backup.backup"), {"name": self.name, "backup_type": self.BackupType}).then(function (response) {
+                    self.show_loading = false;
+                    if (response?.data){
+                        switch (response.data.result){
+                            case "success":{
+                                alertify.success(response.data.message);
+                                self.Backups = response.data?.backups;
+                                break;
+                            }
+                            case "failed":{
+                                alertify.warning(response.data.message);
+                                break;
+                            }
+                        }
+                    }
                 }).catch(function (error) {
                     self.show_loading = false;
                     alertify.notify("عدم توانایی در انجام عملیات" + `(${error})`, 'error', "30");

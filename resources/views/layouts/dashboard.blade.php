@@ -11,9 +11,6 @@
     @yield('variables')
     <script>
         const agent = @json($agent);
-        @if(Session::has('print-url'))
-        let print_url = '{{ route("print_docs",["path" => Session::get('print-url')]) }}';
-        @endif
         const logged_user = @json(['user' => auth()->check() ? auth()->user()->id : null,
         'role' => auth()->check() && auth()->user()->role != null ? auth()->user()->role->id : null,]);
     </script>
@@ -23,8 +20,8 @@
     <loading v-show="show_loading" v-cloak></loading>
     <div v-cloak v-if="sidebar_toggle" class="mobile_sidebar w-100 bg-dark">
         <div class="w-100 d-flex align-items-center justify-content-start px-4 py-3">
-            <button class="btn btn-sm btn-outline-light" v-on:click="toggle_sidebar('open')">
-                <i class="fad fa-bars fa-2x"></i>
+            <button class="btn btn-sm btn-outline-light" v-on:click="toggle_sidebar">
+                <i class="fas fa-bars fa-2x"></i>
             </button>
             <h5 class="iranyekan ms-3 mb-0 white-color">همیاران شمال شرق</h5>
         </div>
@@ -36,9 +33,8 @@
                     <img v-cloak v-if="!is_static_sidebar && !sidebar_toggle" class="dashboard-logo" :class="!is_static_sidebar ? 'mx-auto' : null" alt="همیاران شمال شرق" src="{{ asset("/images/logo-original.svg") }}"/>
                     <span class="company_name iranyekan mb-0 white-color">داشبورد مدیریتی</span>
                 </a>
-                <i v-cloak v-if="sidebar_toggle" class="fa fa-arrow-right fa-1-4x white-color pointer-cursor hover-scale" v-on:click="toggle_sidebar('close')"></i>
-                <i v-cloak v-if="desktop_sidebar_toggle && is_static_sidebar" class="fad fa-arrow-right-to-line fa-1-3x small-sidebar-button white-color pointer-cursor hover-scale" v-on:click="desktop_toggle_sidebar('minimize')"></i>
-                <i v-cloak v-if="!is_static_sidebar && !sidebar_toggle" class="fad fa-arrows-left-right-to-line fa-1-3x small-sidebar-button white-color pointer-cursor hover-scale" v-on:click="desktop_toggle_sidebar('maximize-static')"></i>
+                <i v-cloak v-if="desktop_sidebar_toggle && is_static_sidebar" class="fad fa-chevrons-right fa-1-3x small-sidebar-button white-color pointer-cursor hover-scale" v-on:click="desktop_toggle_sidebar('minimize')"></i>
+                <i v-cloak v-if="!is_static_sidebar && !sidebar_toggle" class="fad fa-chevrons-left fa-1-3x small-sidebar-button white-color pointer-cursor hover-scale" v-on:click="desktop_toggle_sidebar('maximize-static')"></i>
             </div>
             <hr>
             <ul class="nav nav-pills flex-column mb-auto sidebar-menu">
@@ -64,15 +60,15 @@
                             @if($user->role)
                                 {{ $user->role->name }}
                             @elseif($user->is_super_user)
-                                {{ "مدیر پشتیبانی" }}
+                                {{ "مدیر آی تی" }}
                             @elseif($user->is_admin)
                                 {{ "مدیر سامانه" }}
                             @elseif($user->is_staff)
-                                {{ "کارشناس سامانه" }}
+                                {{ "کارشناس" }}
                             @elseif($user->is_user)
                                 {{ "پرسنل" }}
                             @else
-                                {{ "نامشخص" }}
+                                {{ "کاربر سامانه" }}
                             @endif
                         </strong>
                     </div>
@@ -138,6 +134,9 @@
                                 @switch(session("message"))
                                     @case("unknown")
                                         نتیجه عملیات نامشخص می باشد
+                                        @break
+                                    @case("successful")
+                                        عملیات با موفقیت انجام شد
                                         @break
                                     @case("saved")
                                         عملیات ذخیره سازی با موفقیت انجام شد
@@ -358,7 +357,7 @@
         @yield('modals')
     </div>
 </div>
-<script src="{{ asset('/js/app.js?v='.time()) }}"></script>
+<script src="{{ asset('js/app.js?v='.time()) }}"></script>
 @yield('scripts')
 </body>
 </html>

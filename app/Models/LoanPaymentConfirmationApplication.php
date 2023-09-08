@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LoanPaymentConfirmationApplication extends Model
 {
+    public $timestamps = false;
     use HasFactory;use softDeletes;
     protected $table = "loan_payment_confirmation_applications";
-    protected $fillable = ["user_id","employee_id","recipient","borrower","loan_amount","is_accepted","is_refused","inactive","i_number","data"];
+    protected $fillable = ["created_at","updated_at","user_id","employee_id","recipient","borrower","loan_amount","is_accepted","is_refused","inactive","i_number","data"];
     protected $appends = ["data_array"];
 
     public function form(): MorphOne

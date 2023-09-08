@@ -2,17 +2,23 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-            <i v-if="sidebar_toggle" class="sidebar-toggle fa fa-bars fa-1-6x me-4" v-cloak
-               v-on:click="toggle_sidebar('open')"></i>
-            <h5 class="iransans d-inline-block m-0 d-flex align-items-center">
-                اخبار
-                <span class="vertical-middle ms-2">(ویرایش)</span>
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
+                اخبار داخلی
+                <span class="vertical-middle ms-1 text-muted">ویرایش</span>
             </h5>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-light">
+                <i class="fa fa-circle-question fa-1-4x green-color"></i>
+            </button>
+            <a role="button" class="btn btn-sm btn-outline-light" href={{route("staff_idle")}}>
+                <i class="fa fa-times fa-1-4x gray-color"></i>
+            </a>
         </div>
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content edit w-100">
         <form id="update_form" class="p-3" action="{{ route("News.update",$news->id) }}" method="POST" enctype="multipart/form-data" v-on:submit="submit_form">
             @csrf
             @method('put')
@@ -100,19 +106,19 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="mb-3 col-12 text-center pt-4 pb-2 position-sticky">
-                    <button type="submit" form="update_form" class="btn btn-success submit_button">
-                        <i class="submit_button_icon fa fa-check fa-1-2x me-1"></i>
-                        <span class="iransans">ارسال و ویرایش</span>
-                    </button>
-                    <a role="button" href="{{ route("News.index") }}"
-                       class="btn btn-outline-secondary iransans">
-                        <i class="fa fa-arrow-turn-right fa-1-2x me-1"></i>
-                        <span class="iransans">بازگشت به لیست</span>
-                    </a>
-                </div>
-            </div>
         </form>
+    </div>
+@endsection
+@section('footer')
+    <div class="content-footer-container d-flex align-items-center justify-content-center gap-3 flex-wrap">
+        <button type="submit" form="update_form" class="btn btn-success submit_button">
+            <i class="submit_button_icon fa fa-check fa-1-2x me-1"></i>
+            <span class="iransans">ارسال و ویرایش</span>
+        </button>
+        <a role="button" href="{{ route("News.index") }}"
+           class="btn btn-outline-secondary iransans">
+            <i class="fa fa-arrow-turn-right fa-1-2x me-1"></i>
+            <span class="iransans">بازگشت به لیست</span>
+        </a>
     </div>
 @endsection

@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class AutomationSign extends Model
 {
+    public $timestamps = false;
     use HasFactory;
     protected $table = "automation_signs";
-    protected $fillable = ["automation_id","user_id","sign","refer"];
+    protected $fillable = ["created_at","updated_at","automation_id","user_id","sign","refer"];
 
     public function automation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SettlementFormApplication extends Model
 {
+    public $timestamps = false;
     use HasFactory;use softDeletes;
     protected $table = "settlement_form_applications";
-    protected $fillable = ["user_id","employee_id","is_accepted","is_refused","inactive","i_number","data"];
+    protected $fillable = ["created_at","updated_at","user_id","employee_id","is_accepted","is_refused","inactive","i_number","data"];
     protected $appends = ["data_array"];
 
     public function automation(): MorphOne

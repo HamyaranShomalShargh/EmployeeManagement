@@ -2,10 +2,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-            <h4 class="iransans d-inline-block m-0 fw-bolder">
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
                 تعرفه دستمزد پرسنل - قانون کار
                 <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
-            </h4>
+            </h5>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -18,7 +18,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div class="input-group mb-2">
             <button class="btn btn-primary d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_labour_law_modal">
                 <i class="fa fa-plus fa-1-6x"></i>

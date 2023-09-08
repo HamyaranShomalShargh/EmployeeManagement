@@ -20,7 +20,7 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 
-Pusher.logToConsole = true;
+Pusher.logToConsole = process.env.MIX_PUSHER_DEBUG ? process.env.MIX_PUSHER_DEBUG : false;
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: process.env.MIX_PUSHER_APP_KEY,

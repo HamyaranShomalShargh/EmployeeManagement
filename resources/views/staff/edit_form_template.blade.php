@@ -20,7 +20,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div style="background-color: #c2c2c3">
             <form-template method="put"></form-template>
         </div>

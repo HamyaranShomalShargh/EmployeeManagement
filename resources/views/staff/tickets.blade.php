@@ -17,7 +17,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div class="input-group mb-2">
             <input type="text" class="form-control text-center iransans" placeholder="جستجو با موضوع و نام خانوادگی و کد ملی">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>

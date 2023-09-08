@@ -9,10 +9,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-            <h4 class="iransans d-inline-block m-0 fw-bolder">
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
                 ثبت نام پرسنل
                 <span class="vertical-middle ms-1 text-muted">تایید ، عدم تایید ، حذف</span>
-            </h4>
+            </h5>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -25,7 +25,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div class="input-group mb-2">
             <div class="dropdown">
                 <button class="btn btn-primary dropdown-toggle iransans group-dropdown-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">

@@ -7,9 +7,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">درخواست ثبت نام پرسنل</h5>
-            <span>(جستجو و ویرایش)</span>
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
+                درخواست پیش ثبت نام
+                <span class="vertical-middle ms-1 text-muted">مشاهده ، تایید ، عدم تایید</span>
+            </h5>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -22,29 +23,29 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div class="input-group mb-2">
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام خانوادگی و کد ملی">
+            <input type="text" class="form-control text-center iransans" data-table="unregistered_employees_table" placeholder="جستجو با نام، کد ملی و سازمان" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table>
+                <table id="unregistered_employees_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2,3]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col"><span>شماره</span></th>
+                        <th scope="col" style="width: 70px" data-sortas="numeric"><span>شماره</span></th>
                         <th scope="col"><span>نام</span></th>
-                        <th scope="col"><span>کد ملی</span></th>
+                        <th scope="col" style="width: 130px"><span>کد ملی</span></th>
                         <th scope="col"><span>سازمان</span></th>
-                        <th scope="col"><span>توضیحات</span></th>
-                        <th scope="col"><span>تاریخ ثبت</span></th>
-                        <th scope="col"><span>عملیات</span></th>
+                        <th scope="col" style="width: 90px"><span>توضیحات</span></th>
+                        <th scope="col" style="width: 140px"><span>تاریخ ثبت</span></th>
+                        <th scope="col" style="width: 150px"><span>عملیات</span></th>
                     </tr>
                     </thead>
                     <tbody>
                     @forelse($employees as $employee)
                         <tr>
-                            <td><span class="iransans">{{ $employee->id }}</span></td>
+                            <td class="iransans">{{ $employee->id }}</td>
                             <td><span class="iransans">{{ $employee->name }}</span></td>
                             <td><span class="iransans">{{ $employee->national_code }}</span></td>
                             <td><span class="iransans">{{ $employee->organization->name }}</span></td>
@@ -57,13 +58,32 @@
                             </td>
                             <td><span class="iransans">{{ verta($employee->cretaed_at)->format("Y/m/d") }}</span></td>
                             <td>
-                                <i class="far fa-check-square fa-1-6x green-color hover-scale" data-bs-toggle="modal" data-bs-target="#confirm_modal" v-on:click="SetUnregisteredEmployee($event,{{$employee->id}},'confirm_form')"></i>
-                                <i class="far fa-times-square fa-1-6x ms-3 red-color hover-scale" data-bs-toggle="modal" data-bs-target="#reject_modal" v-on:click="SetUnregisteredEmployee($event,{{$employee->id}},'reject_form')"></i>
+                                <div class="d-flex flex-row flex-wrap align-items-center justify-content-center gap-2 gap-lg-3">
+                                    <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirm_modal" v-on:click="SetUnregisteredEmployee($event,{{$employee->id}},'confirm_form')">
+                                        <i class="far fa-check-square fa-1-2x vertical-middle"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reject_modal" v-on:click="SetUnregisteredEmployee($event,{{$employee->id}},'reject_form')">
+                                        <i class="far fa-times-square fa-1-2x vertical-middle"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     @empty
+                        <tr><td colspan="7"><span class="iransans">اطلاعاتی وجود ندارد</span></td></tr>
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="12">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    {{ count($employees) }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

@@ -63,7 +63,8 @@ class ApplicationFormController extends Controller
                     "contract_name" => $employee->contract->name
                     ],
                 "payslip" => EmployeePaySlip::Last(Auth::user()->employee->id),
-                "active_contract_date" => $employee->active_contract_date()
+                "active_contract_date" => $employee->active_contract_date(),
+                "active_salary_details" => $employee->active_salary_details()
             ],JSON_UNESCAPED_UNICODE);
             $class = '';
             $pre_number = implode('',Str::matchAll("/[A-Z]+/",$validated["application_form_type"])->toArray());

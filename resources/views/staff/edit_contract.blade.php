@@ -17,17 +17,23 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-            <i v-if="sidebar_toggle" class="sidebar-toggle fa fa-bars fa-1-6x me-4" v-cloak
-               v-on:click="toggle_sidebar('open')"></i>
-            <h5 class="iransans d-inline-block m-0 d-flex align-items-center">
-                قرارداد
-                <span class="vertical-middle ms-2">(ویرایش)</span>
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
+                قراردادها
+                <span class="vertical-middle ms-1 text-muted">ویرایش</span>
             </h5>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-light">
+                <i class="fa fa-circle-question fa-1-4x green-color"></i>
+            </button>
+            <a role="button" class="btn btn-sm btn-outline-light" href={{route("staff_idle")}}>
+                <i class="fa fa-times fa-1-4x gray-color"></i>
+            </a>
         </div>
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content edit w-100">
         <form id="update_form" class="p-3" action="{{ route("Contracts.update",$contract->id) }}" method="POST" :data-json="is_parent === false ? 'employees' : 'children_subset_list'" enctype="multipart/form-data" v-on:submit="submit_form">
             @csrf
             @method('PUT')
@@ -179,47 +185,46 @@
                     @enderror
                 </div>
             </div>
-            <div class="row">
-                <div class="mb-3 col-12 form-button-row text-center pt-4 pb-2">
-                    <button type="submit" form="update_form" class="btn btn-success submit_button">
-                        <i class="submit_button_icon fa fa-check fa-1-2x me-1"></i>
-                        <span class="iransans">ارسال و ویرایش</span>
-                    </button>
-                    <a role="button" href="{{ route("Contracts.index") }}"
-                       class="btn btn-outline-secondary iransans">
-                        <i class="fa fa-arrow-turn-right fa-1-2x me-1"></i>
-                        <span class="iransans">بازگشت به لیست</span>
-                    </a>
-                </div>
-            </div>
         </form>
+    </div>
+@endsection
+@section("footer")
+    <div class="content-footer-container d-flex align-items-center justify-content-center gap-3 flex-wrap">
+        <button type="submit" form="update_form" class="btn btn-success submit_button">
+            <i class="submit_button_icon fa fa-check fa-1-2x me-1"></i>
+            <span class="iransans">ارسال و ویرایش</span>
+        </button>
+        <a role="button" href="{{ route("Contracts.index") }}"
+           class="btn btn-outline-secondary iransans">
+            <i class="fa fa-arrow-turn-right fa-1-2x me-1"></i>
+            <span class="iransans">بازگشت به لیست</span>
+        </a>
     </div>
 @endsection
 @section('modals')
     <div class="modal fade rtl" id="edit_contract_employees_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-fullscreen modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title iransans">ویرایش پرسنل</h5>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-3">
-                        <div class="mb-3 mb-md-0 col-12 col-md-3">
+                        <div class="mb-3 mb-md-0 col-12 col-md-3 col-lg-2">
                             <label class="form-label iransans">نام</label>
                             <input class="form-control text-center iransans" type="text" id="new_name">
                         </div>
-                        <div class="mb-3 mb-md-0 col-12 col-md-3">
+                        <div class="mb-3 mb-md-0 col-12 col-md-3 col-lg-2">
                             <label class="form-label iransans">
                                 کد ملی
-                                <strong class="red-color">*</strong>
                             </label>
                             <input class="form-control text-center iransans number_masked" data-mask="0000000000" type="text" id="new_national_code">
                         </div>
-                        <div class="mb-3 mb-md-0 col-12 col-md-3">
+                        <div class="mb-3 mb-md-0 col-12 col-md-3 col-lg-2">
                             <label class="form-label iransans">موبایل</label>
                             <input class="form-control text-center iransans number_masked" data-mask="00000000000" type="text" id="new_mobile">
                         </div>
-                        <div class="mb-md-0 col-12 col-md-3 align-self-end text-center">
+                        <div class="mb-md-0 col-12 col-md-2 col-lg-1 align-self-end text-center">
                             @if($contract->is_parent === 0)
                                 <live-transfer :target="'table_data_records'" :elements="['#new_name','#new_national_code','#new_mobile']" :required="['#new_name','#new_national_code']" :class="'btn btn-outline-success w-100'" :operation_id="{{ $contract->id }}" route="{{ route("Contracts.pre_employee_operation","add") }}" :message="'آیا برای افزودن پرسنل جدید اطمینان دارید؟'">
                                     <i class="fa fa-plus fa-1-2x me-1"></i>

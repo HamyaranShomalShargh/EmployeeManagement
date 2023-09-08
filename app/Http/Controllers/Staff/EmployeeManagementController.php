@@ -1184,6 +1184,34 @@ class EmployeeManagementController extends Controller
             return $response;
         }
     }
+    public function request_preview($id){
+        //Gate::authorize('requests_history_print',"EmployeesManagement");
+        try {
+            $automation = Automation::query()->with(["user","automationable","employee.automations.user","employee.automations.signs","employee.automations.automationable","signs.user.role","comments.user.role"])->findOrFail($id);
+            $qrCode = new QrCode(route("Validation.direct",["i_number" => $automation->automationable->i_number]));
+            $output = new Output\Png();
+            $pdf = PDF::loadView("layouts.pdf.{$automation->application_class}", [
+                "application" => $automation,
+                "background" => base64_encode(file_get_contents(public_path("images/A4.jpg"))),
+                "qrCode" => base64_encode($output->output($qrCode, 100, [255, 255, 255], [0, 0, 0])),
+                "company_information" => CompanyInformation::query()->first(),
+                "logo" => base64_encode(file_get_contents(public_path("/images/logo.png"))),
+                "number" => $automation->automationable->i_number,
+                "sign" => false
+            ], [], [
+                'format' => "A4-P"
+            ]);
+            return response()->make($pdf->stream("request.pdf"),200,[
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="request.pdf"'
+            ]);
+        }
+        catch (Throwable $error) {
+            $response["result"] = "fail";
+            $response["message"] = $error->getMessage() . $error->getLine();
+            return $response;
+        }
+    }
     public function history(Request $request): array
     {
         Gate::authorize('history',"EmployeesManagement");

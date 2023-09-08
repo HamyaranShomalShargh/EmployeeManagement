@@ -10,10 +10,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-            <h4 class="iransans d-inline-block m-0 fw-bolder">
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
                 مدیریت پرسنل
                 <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
-            </h4>
+            </h5>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -26,7 +26,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div class="offcanvas offcanvas-end" tabindex="-1" id="employee_management_menu" aria-labelledby="employee_management_menu">
             <div class="offcanvas-header border-bottom">
                 <h5 class="offcanvas-title iransans fw-bolder">منوی عملیات</h5>
@@ -589,12 +589,12 @@
         </div>
     </div>
     <div class="modal fade" id="pdf_viewer_modal" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-dialog modal-fullscreen" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h6 class="modal-title iransans">چاپ مستندات</h6>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-0">
                     <embed
                         class="printer-dialog m-auto" id="pdf_viewer"
                         type="application/pdf"

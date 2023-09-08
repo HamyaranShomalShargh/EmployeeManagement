@@ -12,7 +12,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <form id="main_submit_form" class="p-3" action="{{ route("SmsPhraseCategory.update",$category->id) }}" method="POST" v-on:submit="submit_form">
             @csrf
             @method('PUT')

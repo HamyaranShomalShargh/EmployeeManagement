@@ -7,9 +7,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">درخواست اصلاح اطلاعات پرسنل</h5>
-            <span>(ایجاد، جستجو و ویرایش)</span>
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
+                تایید مجدد اطلاعات پرسنل
+                <span class="vertical-middle ms-1 text-muted">مشاهده ، تایید ، عدم تایید</span>
+            </h5>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -22,68 +23,75 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div class="input-group mb-2">
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام سرفصل">
+            <input type="text" class="form-control text-center iransans" data-table="refresh_employees_table" placeholder="جستجو با نام، کد ملی و سازمان" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table>
+                <table id="refresh_employees_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2,3]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col"><span>شماره</span></th>
+                        <th scope="col" style="width: 70px" data-sortas="numeric"><span>شماره</span></th>
                         <th scope="col"><span>نام</span></th>
-                        <th scope="col"><span>کد ملی</span></th>
+                        <th scope="col" style="width: 110px"><span>کد ملی</span></th>
                         <th scope="col"><span>سازمان</span></th>
-                        <th scope="col"><span>توسط</span></th>
-                        <th scope="col"><span>تاریخ بارگذاری</span></th>
-                        <th scope="col"><span>تاریخ ثبت</span></th>
-                        <th scope="col"><span>تاریخ ویرایش</span></th>
+                        <th scope="col"><span>قرارداد</span></th>
+                        <th scope="col" style="width: 120px"><span>توسط</span></th>
+                        <th scope="col" style="width: 120px"><span>تاریخ ثبت</span></th>
+                        <th scope="col" style="width: 120px"><span>تاریخ بارگذاری</span></th>
+                        <th scope="col" style="width: 150px"><span>عملیات</span></th>
                     </tr>
                     </thead>
                     <tbody>
                     @forelse($refresh_employees as $employee)
-                        <tr @contextmenu.prevent="$refs.contextMenu.open" v-on:contextmenu="RefreshDataContextMenu($event,{{$employee->id}})">
-                            <td><span class="iransans">{{ $employee->id }}</span></td>
+                        <tr>
+                            <td class="iransans">{{ $employee->id }}</td>
                             <td><span class="iransans">{{ $employee->employee->name }}</span></td>
                             <td><span class="iransans">{{ $employee->employee->national_code }}</span></td>
                             <td><span class="iransans">{{ $employee->employee->contract->organization->name }}</span></td>
+                            <td><span class="iransans">{{ $employee->employee->contract->name }}</span></td>
                             <td><span class="iransans">{{ $employee->user->name }}</span></td>
-                            <td><span class="iransans">{{ verta($employee->reload_date)->format("Y/m/d") }}</span></td>
                             <td><span class="iransans">{{ verta($employee->cretaed_at)->format("Y/m/d") }}</span></td>
-                            <td><span class="iransans">{{ verta($employee->updated_at)->format("Y/m/d") }}</span></td>
+                            <td><span class="iransans">{{ verta($employee->reload_date)->format("Y/m/d") }}</span></td>
+                            <td>
+                                <div class="d-flex flex-row flex-wrap align-items-center justify-content-center gap-2 gap-lg-3">
+                                    <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#docs_modal" v-on:click="RefreshDataContextMenu($event,{{$employee->id}});insert_employee_information">
+                                        <i class="far fa-magnifying-glass fa-1-2x vertical-middle"></i>
+                                    </button>
+                                    @can('confirm','RefreshDataEmployees')
+                                        <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirm_modal" v-on:click="RefreshDataContextMenu($event,{{$employee->id}})">
+                                            <i class="far fa-check fa-1-2x vertical-middle"></i>
+                                        </button>
+                                    @endcan
+                                    @can('refuse','RefreshDataEmployees')
+                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#refuse_modal" v-on:click="RefreshDataContextMenu($event,{{$employee->id}})">
+                                            <i class="far fa-times fa-1-2x vertical-middle"></i>
+                                        </button>
+                                    @endcan
+                                </div>
+                            </td>
                         </tr>
                     @empty
+                        <tr><td colspan="9"><span class="iransans">اطلاعاتی وجود ندارد</span></td></tr>
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="13">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    {{ count($refresh_employees) }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
-        <vue-context v-cloak ref="contextMenu">
-            <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
-                <button class="dropdown-item d-flex align-items-center justify-content-start" data-bs-toggle="modal" data-bs-target="#docs_modal" v-on:click="insert_employee_information">
-                    <i class="fa fa-magnifying-glass fa-1-2x me-2"></i>
-                    <span class="iransans">مشاهده اطلاعات</span>
-                </button>
-            </li>
-            @can('confirm','RefreshDataEmployees')
-                <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
-                    <button class="dropdown-item d-flex align-items-center justify-content-start" data-bs-toggle="modal" data-bs-target="#confirm_modal">
-                        <i class="fa fa-check fa-1-2x me-2"></i>
-                        <span class="iransans">تایید</span>
-                    </button>
-                </li>
-            @endcan
-            @can('refuse','RefreshDataEmployees')
-                <li class="py-2 px-3 pointer-cursor hover-blue hover-bg-light">
-                    <button class="dropdown-item d-flex align-items-center justify-content-start" data-bs-toggle="modal" data-bs-target="#refuse_modal">
-                        <i class="fa fa-times fa-1-2x me-2"></i>
-                        <span class="iransans">عدم تایید</span>
-                    </button>
-                </li>
-            @endcan
-        </vue-context>
     </div>
 @endsection
 @section('modals')

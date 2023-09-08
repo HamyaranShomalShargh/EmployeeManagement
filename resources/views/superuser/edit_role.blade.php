@@ -12,7 +12,7 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <form id="update_form" class="p-3" action="{{ route("SuperUserRoles.update",$role->id) }}" method="POST"
               enctype="multipart/form-data" v-on:submit="submit_form">
             @csrf

@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PersonnelAppointmentForm extends Model
 {
+    public $timestamps = false;
     use HasFactory;use softdeletes;
     protected $table = "personnel_appointment_forms";
-    protected $fillable = ["user_id","employee_id","is_accepted","is_refused","inactive","data","i_number"];
+    protected $fillable = ["created_at","updated_at","user_id","employee_id","is_accepted","is_refused","inactive","data","i_number"];
     protected $appends = ["data_array"];
 
     public function user(): BelongsTo

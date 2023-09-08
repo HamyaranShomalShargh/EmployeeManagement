@@ -13,9 +13,10 @@ use Sarfraznawaz2005\SSE\Facades\SSEFacade;
 
 class Automation extends Model
 {
+    public $timestamps = false;
     use HasFactory;
     protected $table = "automation";
-    protected $fillable = ["user_id","employee_id","contract_id","current_role_id","automationable_id","automationable_type","flow","is_read","is_finished","editable","current_priority","message"];
+    protected $fillable = ["created_at","updated_at","user_id","employee_id","contract_id","current_role_id","automationable_id","automationable_type","flow","is_read","is_finished","editable","current_priority","message"];
     protected $appends = ["application_name","application_class","expiration_date","flow_array"];
 
     public function automationable(): MorphTo

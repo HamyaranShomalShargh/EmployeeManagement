@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Mpdf\QrCode\QrCode;
 use Mpdf\QrCode\Output;
+use function Psl\Type\null;
 
 class EmployeePaySlip extends Model
 {
@@ -118,7 +119,10 @@ class EmployeePaySlip extends Model
             $employee = Employee::query()->findOrFail($employee_id);
             $year = verta($employee->active_contract_date()["start"])->format("Y");
             $labour_law = LabourLawTariff::query()->where("effective_year","=",$year)->first();
-            $result["total_net"] = $result["total_advantages"] = (30 * $labour_law->daily_wage) + $labour_law->household_consumables_allowance + $labour_law->housing_purchase_allowance + ($employee->included_children_count * $labour_law->child_allowance);
+            if ($labour_law != null)
+                $result["total_net"] = $result["total_advantages"] = (30 * $labour_law->daily_wage) + $labour_law->household_consumables_allowance + $labour_law->housing_purchase_allowance + ($employee->included_children_count * $labour_law->child_allowance);
+            else
+                $result["total_net"] = $result["total_advantages"] = 0;
         }
         return $result;
     }

@@ -22,7 +22,7 @@ class EmployeeRequestAutomationController extends Controller
 {
     public function index(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse
     {
-
+        Gate::authorize('index',"EmployeeRequestsAutomation");
         try {
             return view("staff.automation",[
                 "records" => Automation::GetPermitted(),
@@ -33,8 +33,9 @@ class EmployeeRequestAutomationController extends Controller
             return redirect()->back()->withErrors(["logical" => $error->getMessage()]);
         }
     }
-    public function confirm(Request $request): array|\Illuminate\Http\RedirectResponse
+    public function confirm(Request $request): array
     {
+        Gate::authorize('confirm',"EmployeeRequestsAutomation");
         try {
             DB::beginTransaction();
             $request->validate(["id" => "required",],["id.required" => "شماره درخواست مشخص نمی باشد",]);
@@ -88,7 +89,9 @@ class EmployeeRequestAutomationController extends Controller
             return $response;
         }
     }
-    public function reject(Request $request){
+    public function reject(Request $request): array
+    {
+        Gate::authorize('reject',"EmployeeRequestsAutomation");
         try {
             DB::beginTransaction();
             $request->validate(["id" => "required"],["id.required" => "شماره درخواست مشخص نمی باشد"]);
@@ -224,6 +227,7 @@ class EmployeeRequestAutomationController extends Controller
     }
     public function edit_employee_information(Request $request): array
     {
+//        Gate::authorize('edit_employee_information',"EmployeeRequestsAutomation");
         try {
             DB::beginTransaction();
             $request->validate([

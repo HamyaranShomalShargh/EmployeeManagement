@@ -2,9 +2,10 @@
 @section('header')
     <div class="h-100 bg-white iransans p-3 border-3 border-bottom d-flex flex-row align-items-center justify-content-between">
         <div class="d-flex align-items-center">
-
-            <h5 class="iransans d-inline-block m-0">اخبار</h5>
-            <span>(ایجاد، جستجو و ویرایش)</span>
+            <h5 class="iransans d-inline-block m-0 fw-bolder">
+                اخبار داخلی
+                <span class="vertical-middle ms-1 text-muted">ایجاد ، جستجو ، ویرایش</span>
+            </h5>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-light">
@@ -17,28 +18,27 @@
     </div>
 @endsection
 @section('content')
-    <div class="page-content w-100 p-3">
+    <div class="page-content w-100">
         <div class="input-group mb-2">
-            <button class="btn btn-outline-info d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_news_modal">
-                <i class="fa fa-plus fa-1-4x me-1"></i>
-                <span class="iransans create-button">خبر جدید</span>
+            <button class="btn btn-primary d-flex flex-row align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#new_news_modal">
+                <i class="fa fa-plus fa-1-6x"></i>
             </button>
-            <input type="text" class="form-control text-center iransans" placeholder="جستجو با نام سرفصل">
+            <input type="text" class="form-control text-center iransans" data-table="news_table" placeholder="جستجو با عنوان خبر" v-on:input="filter_table">
             <span class="input-group-text" id="basic-addon1"><i class="fa fa-search fa-1-2x"></i></span>
         </div>
         <div id="table-scroll-container">
             <div id="table-scroll" class="table-scroll">
-                <table class="table table-striped sortArrowWhite">
+                <table id="news_table" class="table table-striped table-hover pointer-cursor sortArrowWhite" data-filter="[1,2,3]">
                     <thead class="bg-menu-dark white-color">
                     <tr class="iransans">
-                        <th scope="col" data-sortas="numeric"><span>شماره</span></th>
+                        <th scope="col" style="width: 70px" data-sortas="numeric"><span>شماره</span></th>
                         <th scope="col"><span>عنوان</span></th>
-                        <th scope="col"><span>وضعیت انتشار</span></th>
-                        <th scope="col" data-sortas="numeric"><span>مشاهده</span></th>
-                        <th scope="col"><span>توسط</span></th>
-                        <th scope="col"><span>تاریخ ثبت</span></th>
-                        <th scope="col"><span>تاریخ ویرایش</span></th>
-                        <th scope="col"><span>عملیات</span></th>
+                        <th scope="col" style="width: 70px"><span>وضعیت انتشار</span></th>
+                        <th scope="col" style="width: 70px" data-sortas="numeric"><span>مشاهده</span></th>
+                        <th scope="col" style="width: 120px"><span>توسط</span></th>
+                        <th scope="col" style="width: 120px"><span>تاریخ ثبت</span></th>
+                        <th scope="col" style="width: 120px"><span>تاریخ ویرایش</span></th>
+                        <th scope="col" style="width: 150px"><span>عملیات</span></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -59,51 +59,64 @@
                             <td>{{ $article->user->name }}</td>
                             <td>{{ verta($article->created_at)->format("Y/m/d") }}</td>
                             <td>{{ verta($article->updated_at)->format("Y/m/d") }}</td>
-                            <td class="position-relative">
-                                <div class="dropdown table-functions iransans">
-                                    <a class="table-functions-button dropdown-toggle border-0 iransans info-color" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-cog fa-1-2x"></i>
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        @can("activation", "News")
-                                            <form class="w-100" id="activation-form-{{ $article->id }}" action="{{ route("News.activation",$article->id) }}" method="POST" v-on:submit="submit_form">
+                            <td>
+                                <div class="d-flex flex-row flex-wrap align-items-center justify-content-center gap-2 gap-lg-3">
+                                    @can("activation", "News")
+                                        <div>
+                                            <form hidden id="activation-form-{{ $article->id }}" action="{{ route("News.activation",$article->id) }}" method="POST" v-on:submit="submit_form">
                                                 @csrf
-                                                <button type="submit" form="activation-form-{{ $article->id }}" class="dropdown-item">
-                                                    @if($article->published == 1)
-                                                        <i class="fa fa-eye-slash vertical-middle"></i>
-                                                        <span>عدم انتشار</span>
-                                                    @elseif($article->published == 0)
-                                                        <i class="fa fa-eye vertical-middle"></i>
-                                                        <span>انتشار</span>
-                                                    @endif
-                                                </button>
                                             </form>
-                                        @endcan
-                                        @can("edit", "News")
-                                                <div class="dropdown-divider"></div>
-                                            <a role="button" href="{{ route("News.edit",$article->id) }}" class="dropdown-item">
-                                                <i class="fa fa-edit"></i>
-                                                <span class="iransans">ویرایش</span>
-                                            </a>
-                                        @endcan
-                                        @can("delete","News")
-                                            <div class="dropdown-divider"></div>
-                                            <form class="w-100" id="delete-form-{{ $article->id }}" action="{{ route("News.destroy",$article->id) }}" method="POST" v-on:submit="submit_form">
+                                            <button type="submit" form="activation-form-{{ $article->id }}" class="btn btn-sm btn-outline-dark">
+                                                @if($article->published == 1)
+                                                    <i class="far fa-eye-slash fa-1-2x vertical-middle"></i>
+                                                @elseif($article->published == 0)
+                                                    <i class="far fa-eye fa-1-2x vertical-middle"></i>
+                                                @endif
+                                            </button>
+                                        </div>
+                                    @endcan
+                                    @can("edit", "News")
+                                        <a role="button" href="{{ route("News.edit",$article->id) }}" class="btn btn-sm btn-outline-dark">
+                                            <i class="far fa-edit fa-1-2x vertical-middle"></i>
+                                        </a>
+                                    @endcan
+                                    @can("delete","News")
+                                        <div>
+                                            <form hidden id="delete-form-{{ $article->id }}" action="{{ route("News.destroy",$article->id) }}" method="POST" v-on:submit="submit_form">
                                                 @csrf
                                                 @method("Delete")
-                                                <button type="submit" form="delete-form-{{ $article->id }}" class="dropdown-item">
-                                                    <i class="fa fa-trash"></i>
-                                                    <span class="iransans">حذف</span>
-                                                </button>
                                             </form>
-                                        @endcan
-                                    </div>
+                                            <button type="submit" form="delete-form-{{ $article->id }}" class="btn btn-sm btn-outline-dark">
+                                                <i class="fa fa-trash fa-1-2x vertical-middle"></i>
+                                            </button>
+                                        </div>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
                     @empty
                     @endforelse
                     </tbody>
+                    <tfoot class="bg-dark">
+                    <tr>
+                        <td colspan="8">
+                            <div class="d-flex align-items-center justify-content-start gap-2 gap-lg-4 my-1 px-2">
+                                <p class="iransans white-color mb-0">
+                                    مجموع :
+                                    {{ count($news) }}
+                                </p>
+                                <p class="iransans white-color mb-0">
+                                    منتشر شده :
+                                    {{  count($news->where("published",1)) }}
+                                </p>
+                                <p class="iransans white-color mb-0">
+                                    منتشر نشده :
+                                    {{ count($news->where("published",2)) }}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

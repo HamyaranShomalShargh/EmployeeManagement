@@ -4,7 +4,7 @@
         <button class="w-100 btn btn-toggle align-items-center justify-content-between rounded collapsed p-0" data-bs-toggle="collapse" data-bs-target="#menu-collapse" @if(Route::is(["MenuHeaders.*","MenuItems.*","MenuActions.*"])) aria-expanded="true" @else aria-expanded="false" @endif>
             <div class="d-flex align-items-center justify-content-start">
                 <i class="menu-header-icon far fa-table-list fa-1-4x me-2"></i>
-                <span class="menu-header-text">منو سیستم</span>
+                <span class="menu-header-text">منو</span>
             </div>
             <i class="fa fa-angle-left menu-header-arrow ms-3 fa-1-4x"></i>
         </button>
@@ -29,35 +29,6 @@
             </ul>
         </div>
     </li>
-    <li class="nav-item mb-1">
-        <button class="w-100 btn btn-toggle align-items-center justify-content-between rounded collapsed p-0" data-bs-toggle="collapse" data-bs-target="#system-collapse" @if(Route::is(["SystemInformation.*"])) aria-expanded="true" @else aria-expanded="false" @endif>
-            <div class="d-flex align-items-center justify-content-start">
-                <i class="menu-header-icon far fa-computer fa-1-4x me-2"></i>
-                <span class="menu-header-text">مدیریت سیستم</span>
-            </div>
-            <i class="fa fa-angle-left menu-header-arrow ms-3 fa-1-4x"></i>
-        </button>
-        <i class="menu-header-icon small-sidebar-icon vertical-middle far fa-computer fa-1-2x me-2"></i>
-        <div id="system-collapse" class="collapse iransans rounded-2 bg-menu-dark-light p-2 @if(Route::is(["SystemInformation.*","AutomationFlow.*","EmployeeRequests.*"])) show @endif">
-            <ul class="btn-toggle-nav list-unstyled fw-normal small">
-                <li class="p-2 @if(Route::is(["SystemInformation.*"])) active @endif">
-                    <a href="{{route("SystemInformation.index")}}" class="menu-item-link rounded iransans @if(Route::is("SystemInformation.*")) active @endif">
-                        اطلاعات سامانه
-                    </a>
-                </li>
-                <li class="p-2 @if(Route::is(["AutomationFlow.*"])) active @endif">
-                    <a href="{{route("AutomationFlow.index")}}" class="menu-item-link rounded iransans @if(Route::is("AutomationFlow.*")) active @endif">
-                        چرخه گردش اتوماسیون
-                    </a>
-                </li>
-                <li class="p-2 @if(Route::is(["EmployeeRequests.*"])) active @endif">
-                    <a href="{{route("EmployeeRequests.index")}}" class="menu-item-link rounded iransans @if(Route::is("EmployeeRequests.*")) active @endif">
-                        مدیریت درخواست های پرسنل
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </li>
     <li class="nav-item mb-2">
         <button class="w-100 btn btn-toggle align-items-center justify-content-between rounded collapsed p-0" data-bs-toggle="collapse" data-bs-target="#user-collapse" @if(Route::is(["SuperUserUsers.*","SuperUserRoles.*"])) aria-expanded="true" @else aria-expanded="false" @endif>
             <div class="d-flex align-items-center justify-content-start">
@@ -77,6 +48,45 @@
                 <li class="p-2 @if(Route::is("SuperUserRoles.*")) active @endif">
                     <a href="{{route("SuperUserRoles.index")}}" class="menu-item-link rounded iransans @if(Route::is("SuperUserRoles.*")) active @endif">
                         عناوین شغلی
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </li>
+    <li class="nav-item mb-1">
+        <button class="w-100 btn btn-toggle align-items-center justify-content-between rounded collapsed p-0" data-bs-toggle="collapse" data-bs-target="#system-collapse" @if(Route::is(["SystemInformation.*"])) aria-expanded="true" @else aria-expanded="false" @endif>
+            <div class="d-flex align-items-center justify-content-start">
+                <i class="menu-header-icon far fa-cogs fa-1-4x me-2"></i>
+                <span class="menu-header-text">امکانات</span>
+            </div>
+            <i class="fa fa-angle-left menu-header-arrow ms-3 fa-1-4x"></i>
+        </button>
+        <i class="menu-header-icon small-sidebar-icon vertical-middle far fa-computer fa-1-2x me-2"></i>
+        <div id="system-collapse" class="collapse iransans rounded-2 bg-menu-dark-light p-2 @if(Route::is(["SystemInformation.*","AutomationFlow.*","EmployeeRequests.*","SystemOperations.*","Backup.*"])) show @endif">
+            <ul class="btn-toggle-nav list-unstyled fw-normal small">
+                <li class="p-2 @if(Route::is(["SystemInformation.*"])) active @endif">
+                    <a href="{{route("SystemInformation.index")}}" class="menu-item-link rounded iransans @if(Route::is("SystemInformation.*")) active @endif">
+                        اطلاعات سامانه
+                    </a>
+                </li>
+                <li class="p-2 @if(Route::is(["AutomationFlow.*"])) active @endif">
+                    <a href="{{route("AutomationFlow.index")}}" class="menu-item-link rounded iransans @if(Route::is("AutomationFlow.*")) active @endif">
+                        چرخه گردش اتوماسیون
+                    </a>
+                </li>
+                <li class="p-2 @if(Route::is(["SystemOperations.*"])) active @endif">
+                    <a href="{{route("SystemOperations.index")}}" class="menu-item-link rounded iransans @if(Route::is("SystemOperations.*")) active @endif">
+                        عملیات فنی
+                    </a>
+                </li>
+                <li class="p-2 @if(Route::is(["Backup.*"])) active @endif">
+                    <a href="{{route("Backup.index")}}" class="menu-item-link rounded iransans @if(Route::is("Backup.*")) active @endif">
+                        ایجاد فایل پشتیبان اطلاعات
+                    </a>
+                </li>
+                <li class="p-2 @if(Route::is(["EmployeeRequests.*"])) active @endif">
+                    <a href="{{route("EmployeeRequests.index")}}" class="menu-item-link rounded iransans @if(Route::is("EmployeeRequests.*")) active @endif">
+                        مدیریت درخواست های پرسنل
                     </a>
                 </li>
             </ul>

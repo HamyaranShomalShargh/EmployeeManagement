@@ -170,87 +170,7 @@
                                 <tbody v-else>
                                 <tr v-if="RegistrationData.length === 0">
                                     <td colspan="5" class="text-center p-4">
-                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
-                                    </td>
-                                </tr>
-                                </tbody>
-                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
-                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
-                                    <td>@{{employee.name}}</td>
-                                    <td>@{{employee.national_code}}</td>
-                                    <td>@{{employee.contract.organization.name}}</td>
-                                    <td v-text="PersianDateString(employee.created_at)"></td>
-                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
-                                </tr>
-                                </tbody>
-                                <tbody v-else>
-                                <tr v-if="RegistrationData.length === 0">
-                                    <td colspan="5" class="text-center p-4">
-                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
-                                    </td>
-                                </tr>
-                                </tbody>
-                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
-                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
-                                    <td>@{{employee.name}}</td>
-                                    <td>@{{employee.national_code}}</td>
-                                    <td>@{{employee.contract.organization.name}}</td>
-                                    <td v-text="PersianDateString(employee.created_at)"></td>
-                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
-                                </tr>
-                                </tbody>
-                                <tbody v-else>
-                                <tr v-if="RegistrationData.length === 0">
-                                    <td colspan="5" class="text-center p-4">
-                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
-                                    </td>
-                                </tr>
-                                </tbody>
-                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
-                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
-                                    <td>@{{employee.name}}</td>
-                                    <td>@{{employee.national_code}}</td>
-                                    <td>@{{employee.contract.organization.name}}</td>
-                                    <td v-text="PersianDateString(employee.created_at)"></td>
-                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
-                                </tr>
-                                </tbody>
-                                <tbody v-else>
-                                <tr v-if="RegistrationData.length === 0">
-                                    <td colspan="5" class="text-center p-4">
-                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
-                                    </td>
-                                </tr>
-                                </tbody>
-                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
-                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
-                                    <td>@{{employee.name}}</td>
-                                    <td>@{{employee.national_code}}</td>
-                                    <td>@{{employee.contract.organization.name}}</td>
-                                    <td v-text="PersianDateString(employee.created_at)"></td>
-                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
-                                </tr>
-                                </tbody>
-                                <tbody v-else>
-                                <tr v-if="RegistrationData.length === 0">
-                                    <td colspan="5" class="text-center p-4">
-                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
-                                    </td>
-                                </tr>
-                                </tbody>
-                                <tbody v-cloak v-if="RegistrationData.data?.records?.length > 0">
-                                <tr v-for="(employee,index) in RegistrationData.data.records" :key="index">
-                                    <td>@{{employee.name}}</td>
-                                    <td>@{{employee.national_code}}</td>
-                                    <td>@{{employee.contract.organization.name}}</td>
-                                    <td v-text="PersianDateString(employee.created_at)"></td>
-                                    <td class="text-center"><a class="btn btn-sm btn-success" href="">مشاهده</a></td>
-                                </tr>
-                                </tbody>
-                                <tbody v-else>
-                                <tr v-if="RegistrationData.length === 0">
-                                    <td colspan="5" class="text-center p-4">
-                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                                        <small class="iranyekan text-muted">اطلاعاتی وجود ندارد</small>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -296,7 +216,7 @@
                                 <tbody v-else>
                                 <tr v-if="AutomationsData.length === 0">
                                     <td colspan="5" class="text-center p-4">
-                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                                        <small class="iranyekan text-muted">اطلاعاتی وجود ندارد</small>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -344,7 +264,7 @@
                                 <tbody v-else>
                                 <tr>
                                     <td colspan="5" class="text-center p-4" style="border: none">
-                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                                        <small class="iranyekan text-muted">اطلاعاتی وجود ندارد</small>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -388,7 +308,7 @@
                                 <tbody v-else>
                                 <tr>
                                     <td colspan="5" class="text-center p-4" style="border: none">
-                                        <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                                        <small class="iranyekan text-muted">اطلاعاتی وجود ندارد</small>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -422,7 +342,7 @@
                             </div>
                         </div>
                         <div v-else class="p-5 d-flex align-items-center justify-content-center">
-                            <small class="iranyekan text-muted">اطلاعاتی یافت نشد!</small>
+                            <small class="iranyekan text-muted">اطلاعاتی وجود ندارد</small>
                         </div>
                     </div>
                 </div>
